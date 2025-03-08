@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import plotly.express as px
+import plotly.graph_objects as go
 
 # Set min date for each country
 min_date = {
@@ -130,4 +131,92 @@ def plot_yield_curve_heatmap(df, country, start_date, end_date):
                     title=f"{country} Government Bond Yield Curve (Heatmap) from {start_date} to {end_date}")
 
     # Show the heatmap
+    st.plotly_chart(fig)
+
+# Plot the animated bond yield curve for a selected period
+def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
+    if country not in yield_columns:
+        st.error("Invalid country selection.")
+        return
+
+    # Filter data for animation range
+    df_filtered = df.loc[start_date:end_date, yield_columns[country]]
+
+    # Filter data for the static reference date
+    df_static = df.loc[selected_date:selected_date, yield_columns[country]]
+
+    # Rename columns to maturities
+    maturity_labels = ["3M", "2Y", "5Y", "10Y", "30Y"]
+    df_filtered = df_filtered.rename(columns=lambda col: get_maturity_name(col))
+    df_static = df_static.rename(columns=lambda col: get_maturity_name(col))
+
+    # Convert to long format for Plotly
+    df_long = df_filtered.reset_index().melt(id_vars="Date", var_name="Maturity", value_name="Yield")
+    df_static_long = df_static.reset_index().melt(id_vars="Date", var_name="Maturity", value_name="Yield")
+
+    # Ensure maturities are in correct order
+    df_long["Maturity"] = pd.Categorical(df_long["Maturity"], categories=maturity_labels, ordered=True)
+    df_static_long["Maturity"] = pd.Categorical(df_static_long["Maturity"], categories=maturity_labels, ordered=True)
+
+    # Convert Date to string to ensure proper animation frame handling
+    df_long["Date"] = df_long["Date"].dt.strftime('%d-%m-%Y')
+
+    # Calculate dynamic Y-axis range with a small buffer
+    y_min = df_long["Yield"].min()
+    y_max = df_long["Yield"].max()
+
+    # Apply a buffer
+    y_buffer = (y_max - y_min) * 0.3  
+    y_max_adjusted = y_max + y_buffer 
+
+    # Create the animated plot
+    fig = px.line(
+        df_long,
+        x="Maturity",
+        y="Yield",
+        labels={"Maturity": "Maturity", "Yield": "Yield"},
+        color="Date",
+        color_discrete_sequence=["cornflowerblue"],  # Animation curve color
+        animation_frame="Date",
+        animation_group="Maturity",
+        range_y=[y_min, y_max_adjusted],
+        markers="*",
+        hover_data={"Maturity": True, "Yield": True, "Date": True},
+    )
+
+    # Add the static yield curve (selected date)
+    static_curve = df_static.iloc[0, :]
+    fig.add_trace(go.Scatter(
+        x=static_curve.index,
+        y=static_curve.values,
+        mode="lines+markers",
+        name=f"Static: {selected_date.strftime('%d-%m-%Y')}",
+        line=dict(color="red", width=2),
+        marker=dict(symbol="circle"),
+    ))
+
+    # Update layout for a better look
+    fig.update_layout(
+        title=f"{country} Yield Curve Animation from {start_date} to {end_date}",
+        autosize=True,
+        height=600,
+        margin=dict(t=70, b=90, l=20, r=20),
+        legend_title="",
+        legend=dict(yanchor="top", y=0.99, xanchor="right", x=0.99),
+    )
+
+    # Check if the slider exists before modifying it
+    if fig.layout.sliders:
+        for step in fig.layout.sliders[0].steps:
+            step["args"][1]["frame"]["redraw"] = True
+    else:
+        st.warning("Slider issue detected. Please check the Date format.")
+
+    # Ensure the updatemenus exist before modifying them
+    if fig.layout.updatemenus:
+        for button in fig.layout.updatemenus[0].buttons:
+            button["args"][1]["frame"]["redraw"] = True
+            button["args"][1]["frame"]["duration"] = 200  # Adjust animation speed
+
+    # Display in Streamlit
     st.plotly_chart(fig)
