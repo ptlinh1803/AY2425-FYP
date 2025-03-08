@@ -32,17 +32,14 @@ def get_maturity_name(ticket):
     else:
         return ticket
 
-# Load data
+# Load yields data
 @st.cache_data
-def load_data(country):
-    file_path = f"data/combined_data/full_{country.lower()}_data.csv"
+def load_yields_data(country):
+    file_path = f"data/combined_data/{country.lower()}_full_yields_only.csv"
     
     try:
         # Read CSV normally, let pandas detect column names
         df = pd.read_csv(file_path)
-
-        # Rename the first column as 'Date' (since it has no name)
-        df.rename(columns={df.columns[0]: "Date"}, inplace=True)
 
         # Convert Date column to datetime
         df["Date"] = pd.to_datetime(df["Date"])
