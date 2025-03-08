@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime
-from util.visualization_util import load_yields_data, min_date, plot_yield_curve
+from util.visualization_util import load_data, min_date, plot_yield_curve
 
 # VISUALIZATION PAGE
 st.set_page_config(
@@ -20,8 +20,9 @@ st.write(f"Select a specific day to see the Government Bond Yield Curve of {coun
 # Default date (last day 31/10/2024)
 selected_date = st.date_input("Select a date", datetime(2024, 10, 31), min_value=min_date[country], max_value=datetime(2024, 10, 31))
 
-# Load data
-df = load_yields_data(country)
+# Load yield data
+file_path = f"data/combined_data/{country.lower()}_full_yields_only.csv"
+df = load_data(file_path)
 
 if df is not None:
     plot_yield_curve(df, selected_date, country)

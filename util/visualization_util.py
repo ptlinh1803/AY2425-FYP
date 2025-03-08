@@ -32,14 +32,18 @@ def get_maturity_name(ticket):
     else:
         return ticket
 
-# Load yields data
+# Load data
 @st.cache_data
-def load_yields_data(country):
-    file_path = f"data/combined_data/{country.lower()}_full_yields_only.csv"
-    
+def load_data(file_path):
     try:
-        # Read CSV normally, let pandas detect column names
-        df = pd.read_csv(file_path)
+        # Determine file type
+        if file_path.endswith(".csv"):
+            df = pd.read_csv(file_path)
+        elif file_path.endswith(".xlsx") or file_path.endswith(".xls"):
+            df = pd.read_excel(file_path)
+        else:
+            st.error("Unsupported file format. Please use CSV or Excel.")
+            return None
 
         # Convert Date column to datetime
         df["Date"] = pd.to_datetime(df["Date"])
