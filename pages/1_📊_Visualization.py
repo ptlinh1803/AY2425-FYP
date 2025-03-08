@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
-from util.visualization_util import load_data, min_date, plot_yield_curve, plot_yield_curve_heatmap, plot_animated_yield_curve
+from util.visualization_util import load_data, min_date, plot_yield_curve, plot_yield_curve_heatmap, plot_animated_yield_curve, plot_3d_yield_curve
 
 # VISUALIZATION PAGE
 st.set_page_config(
@@ -53,5 +53,6 @@ st.header("Visualization for a period")
 # Draw yield curve heatmap
 if "invalid_date" not in st.session_state or st.session_state.invalid_date == False:
     plot_yield_curve_heatmap(df, country, start_date, end_date)
+    plot_3d_yield_curve(df, country, start_date, end_date)
     plot_animated_yield_curve(df, country, start_date, end_date, selected_date)
 

@@ -220,3 +220,61 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
 
     # Display in Streamlit
     st.plotly_chart(fig)
+
+# Plot the 3D yield curve surface
+def plot_3d_yield_curve(df, country, start_date, end_date):
+    if country not in yield_columns:
+        st.error("Invalid country selection.")
+        return
+
+    # Filter data for the selected date range and maturities
+    df_filtered = df.loc[start_date:end_date, yield_columns[country]]
+
+    # Rename columns to maturities
+    maturity_labels = ["3M", "2Y", "5Y", "10Y", "30Y"]
+    df_filtered = df_filtered.rename(columns=lambda col: get_maturity_name(col))
+
+    # Reverse maturities so 3M is displayed first
+    df_filtered = df_filtered[maturity_labels[::-1]]
+
+    # Convert index (Date) to string for plotting
+    df_filtered.index = df_filtered.index.strftime('%Y-%m-%d')
+
+    # Prepare x, y, z data for 3D surface
+    x = df_filtered.columns  # Maturities
+    y = df_filtered.index    # Dates
+    z = df_filtered.values   # Yield values
+
+    # Create 3D Surface plot
+    fig = go.Figure()
+
+    fig.add_trace(go.Surface(
+        x=x, y=y, z=z,
+        colorscale='ice',
+        reversescale=True,
+        showscale=False,
+        hovertemplate='<br>Date: %{y}' +
+                      '<br>Maturity: %{x}' +
+                      '<br>Yield: %{z:.2f}%<extra></extra>'
+    ))
+
+    # Update layout for better readability
+    fig.update_layout(
+        title=f"{country} Yield Curve 3D Surface from {start_date} to {end_date}",
+        autosize=True,
+        height=700,
+        margin=dict(l=0, r=0, b=10, t=40),
+        scene=dict(
+            aspectratio={"x": 1, "y": 1.75, "z": 0.75},
+            camera={"eye": {"x": 1.3, "y": 2.2, "z": 0.3}},  # Slightly tilted for better view
+            xaxis_title="Maturity",
+            yaxis_title="Date",
+            zaxis_title="Yield (%)",
+            xaxis=dict(showspikes=False, showline=True),
+            yaxis=dict(showspikes=False, showline=True),
+            zaxis=dict(showspikes=False, showline=True),
+        )
+    )
+
+    # Display in Streamlit
+    st.plotly_chart(fig)
