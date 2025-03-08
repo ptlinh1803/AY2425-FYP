@@ -17,6 +17,21 @@ yield_columns = {
     "Australia": ['GACGB3M_Close', 'GACGB2_Close', 'GACGB5_Close', 'GACGB10_Close', 'GACGB30_Close'],
 }
 
+# Map ticket to maturity
+def get_maturity_name(ticket):
+    if "3M" in ticket:
+        return "3M"
+    elif "2" in ticket:
+        return "2Y"
+    elif "5" in ticket:
+        return "5Y"
+    elif "10" in ticket:
+        return "10Y"
+    elif "30" in ticket:
+        return "30Y"
+    else:
+        return ticket
+
 # Load data
 @st.cache_data
 def load_data(country):
@@ -51,7 +66,7 @@ def plot_yield_curve(df, selected_date, country):
     df_filtered = df[df.index == pd.to_datetime(selected_date)]
 
     if df_filtered.empty:
-        st.warning(f"No data available for {selected_date.strftime('%Y-%m-%d')}")
+        st.warning(f"No data available for {selected_date.strftime('%d-%m-%Y')}")
         return
 
     # Keep only the selected yield columns
@@ -65,11 +80,11 @@ def plot_yield_curve(df, selected_date, country):
 
     for col in selected_columns:
         if not pd.isna(df_filtered.iloc[0][col]):  # Check for non-null values
-            maturities.append(col)  # Column name represents maturity
+            maturities.append(get_maturity_name(col))  # Column name represents maturity
             yields.append(df_filtered.iloc[0][col])  # Yield value
 
     if not maturities:
-        st.warning(f"No yield data available for {selected_date.strftime('%Y-%m-%d')}")
+        st.warning(f"No yield data available for {selected_date.strftime('%d-%m-%Y')}")
         return
 
     # Create DataFrame for plotting
@@ -77,7 +92,7 @@ def plot_yield_curve(df, selected_date, country):
 
     # Plot using Plotly
     fig = px.line(plot_df, x="Maturity", y="Yield (%)", markers=True,
-                  title=f"Government Bond Yield Curve for {country} on {selected_date.strftime('%Y-%m-%d')}",
+                  title=f"{country} Government Bond Yield Curve on {selected_date.strftime('%d-%m-%Y')}",
                   labels={"Maturity": "Bond Maturity", "Yield (%)": "Yield (%)"})
 
     fig.update_traces(marker_size=8, hoverinfo="x+y", mode="lines+markers")

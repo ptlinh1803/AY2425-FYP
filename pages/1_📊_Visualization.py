@@ -20,9 +20,6 @@ st.write(f"Select a specific day to see the Government Bond Yield Curve of {coun
 # Default date (last day 31/10/2024)
 selected_date = st.date_input("Select a date", datetime(2024, 10, 31), min_value=min_date[country], max_value=datetime(2024, 10, 31))
 
-# Display selected date
-st.write(f"Selected Date: **{selected_date.strftime('%d-%m-%Y')}**")
-
 # Load data
 df = load_data(country)
 
