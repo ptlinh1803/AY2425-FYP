@@ -18,6 +18,19 @@ yield_columns = {
     "Australia": ['GACGB3M_Close', 'GACGB2_Close', 'GACGB5_Close', 'GACGB10_Close', 'GACGB30_Close'],
 }
 
+# Additional graphs
+additional_graphs = {
+    "Japan": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield', 
+              'JPY Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
+              'Gov Debt % GDP', 'USD/JPY Exchange Rate', 'Unemployment Rate', 'Nikkei 225 Index'],
+    "China": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield',
+              'CNY Swap Rates', 'Loan Prime Rate', 'SHIBOR Fixing Rate', 'CPI YoY', 'GDP YoY',
+              'Gov Debt % GDP', 'USD/CNY Exchange Rate', 'Unemployment Rate', 'CSI 300 Index'],
+    "Australia": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield',
+                  'AUD Swap Rates', 'Cash Rate Target', 'CPI YoY', 'GDP YoY','Gov Debt % GDP', 
+                  'USD/AUD Exchange Rate', 'Unemployment Rate', 'Wage Growth YoY', 'ASX 200 Index'],
+}
+
 # Map ticket to maturity
 def get_maturity_name(col_name):
     mappings = {
