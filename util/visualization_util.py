@@ -392,11 +392,8 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
 def plot_multiple_lines(df, start_date, end_date, required_columns, title):
     # Filter data based on the selected date range
     df_filtered = filter_dataframe(df, start_date, end_date, required_columns)
-    if df_filtered is None:
-        # Missing columns already handled in filter_dataframe()
-        return
     
-    if df_filtered.empty:
+    if df_filtered is None or df_filtered.empty:
         st.warning(f"No valid data available between {start_date} and {end_date}.")
         return
     
@@ -415,9 +412,14 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title):
     # Dictionary to store checkbox states
     checkbox_states = {}
 
-    # Iterate over each column and create a checkbox dynamically
-    for col in required_columns:
-        checkbox_states[col] = st.checkbox(f"{col}", key=f"{col}_{title}")
+    # Dynamically determine number of columns (max 5 for better layout)
+    num_cols = min(len(required_columns), 5)  # Use up to 5 columns
+    cols = st.columns(num_cols)  # Create dynamic columns
+
+    # Distribute checkboxes across columns evenly
+    for idx, col in enumerate(required_columns):
+        with cols[idx % num_cols]:  # Cycle through available columns
+            checkbox_states[col] = st.checkbox(f"{col}", key=f"{col}_{title}")
 
     # Add traces dynamically with different colors
     for idx, (col, state) in enumerate(checkbox_states.items()):
@@ -427,7 +429,8 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title):
                 y=df_filtered[col], 
                 mode="lines", 
                 name=col,
-                line=dict(color=plotly_colors[idx % len(plotly_colors)])  # Cycle colors
+                line=dict(color=plotly_colors[idx % len(plotly_colors)]),  # Cycle colors
+                showlegend=True # Always show legend
             ))
 
     # **Fix: Only show the plot if at least one trace is present**
@@ -441,7 +444,7 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title):
         )
 
         # Show the plot
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
     else:
         st.warning("Please select at least one checkbox to display the graph.")
 
