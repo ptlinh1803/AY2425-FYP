@@ -56,7 +56,7 @@ st.session_state.end_date = end_date
 
 # Sidebar: Additional Graph Selection
 selected_graphs = st.sidebar.multiselect(
-    "Choose up to 5 additional graphs to visualize in this period:",
+    "Choose up to 5 additional insights to explore in this period:",
     options=viz.additional_graphs[st.session_state.country],
     default=st.session_state.selected_graphs,
     max_selections=5  # Restrict to 5 selections
@@ -105,3 +105,25 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     df_swap = viz.load_data("data/combined_data/japan_swap_combined.csv")
     required_columns_swap = ["JYSOC_Close", "JYSO2_Close", "JYSO5_Close", "JYSO10_Close", "JYSO30_Close"]
     viz.plot_multiple_lines(df_swap, start_date, end_date, required_columns_swap, "Japan Swap Rate (NEW)")
+
+    # Try plotting Japan CPI (Quarterly)
+    st.markdown("##### **Japan CPI (Consumer Price Index) (NEW)**")
+    df_cpi = viz.load_data("data/others/EHPIJP Japan Consumer Price Index (YoY _).xlsx")
+    viz.plot_or_show_table(df_cpi, "Mid Price", start_date, end_date, "quarterly")
+
+    # Try plotting Japan Debt as % of GDP (Yearly)
+    st.markdown("##### **Japan Debt as % of GDP (NEW)**")
+    df_debt = viz.load_data("data/others/GDDBJAPN Japan Debt as a Percentage of GDP.xlsx")
+    viz.plot_or_show_table(df_debt, "Mid Price", start_date, end_date, "yearly")
+
+    # Try plotting China CPI (Monthly)
+    st.markdown("##### **China CPI (Consumer Price Index) (NEW)**")
+    df_china_cpi = viz.load_data("data/others/CNCPIYOY Daily China CPI YoY.xlsx")
+    viz.plot_or_show_table(df_china_cpi, "Last Price", start_date, end_date, "monthly")
+
+    # China Loan Prime Rate is monthly but have 2 lines (1Y and 5Y)
+    st.markdown("##### **China Loan Prime Rate (NEW)**")
+    df_china_loan = viz.load_data("data/combined_data/china_loan_prime_rate_combined.csv")
+    df_china_loan_filtered = viz.filter_data_by_frequency(df_china_loan, start_date, end_date, "monthly")
+    required_columns_china_loan = ["CHLRLPR1_Last Price", "CHLRLPR5_Last Price"]
+    viz.plot_multiple_lines(df_china_loan_filtered, start_date, end_date, required_columns_china_loan, "China Loan Prime Rate (NEW)", is_filtered=True)

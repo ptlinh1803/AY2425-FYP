@@ -133,6 +133,7 @@ def find_moving_average_columns(df):
     return ma_columns
 
 # 2.6. Dynamic downsampling based on length of data
+@st.cache_data
 def adaptive_downsampling(df):
     num_rows = len(df)
     
@@ -147,6 +148,42 @@ def adaptive_downsampling(df):
         return df  # No downsampling needed
     
     return df.iloc[::step]
+
+# 2.7. Filter data based on selected frequency
+@st.cache_data
+def filter_data_by_frequency(df, start_date, end_date, frequency):
+    """Filter data based on selected frequency (monthly, quarterly, or yearly)."""
+    df_filtered = df.copy()
+    
+    # Ensure the index is in datetime format
+    df_filtered.index = pd.to_datetime(df_filtered.index)
+    
+    # Filter based on frequency
+    if frequency == "yearly":
+        df_filtered = df_filtered[(df_filtered.index.year >= start_date.year) & 
+                                  (df_filtered.index.year <= end_date.year)]
+    
+    elif frequency == "monthly":
+        # Convert start_date and end_date to pandas Timestamp
+        start_date_pd = pd.Timestamp(start_date)
+        end_date_pd = pd.Timestamp(end_date)
+
+        df_filtered = df_filtered[
+            (df_filtered.index.to_period("M") >= start_date_pd.to_period("M")) & 
+            (df_filtered.index.to_period("M") <= end_date_pd.to_period("M"))
+        ]
+
+    
+    elif frequency == "quarterly":
+        start_qtr = (start_date.month - 1) // 3 + 1
+        end_qtr = (end_date.month - 1) // 3 + 1
+        df_filtered = df_filtered[(df_filtered.index.year >= start_date.year) & 
+                                  (df_filtered.index.year <= end_date.year)]
+        df_filtered = df_filtered[df_filtered.index.to_period("Q").isin(pd.period_range(
+            f"{start_date.year}Q{start_qtr}", f"{end_date.year}Q{end_qtr}", freq="Q"
+        ))]
+    
+    return df_filtered
     
 
 # 3. VISUALIZATION-------------------------------------
@@ -389,12 +426,20 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
     st.plotly_chart(fig)
 
 # 3.5. Draw plot with multiple lines
-def plot_multiple_lines(df, start_date, end_date, required_columns, title):
+def plot_multiple_lines(df, start_date, end_date, required_columns, title, is_filtered=False):
     # Filter data based on the selected date range
-    df_filtered = filter_dataframe(df, start_date, end_date, required_columns)
+    if not is_filtered:
+        df_filtered = filter_dataframe(df, start_date, end_date, required_columns)
+    else:
+        df_filtered = df # df is already filtered
     
     if df_filtered is None or df_filtered.empty:
         st.warning(f"No valid data available between {start_date} and {end_date}.")
+        return
+    
+    if len(df_filtered) < 4:
+        # Not enough data points. Show DataFrame instead of plotting
+        st.dataframe(df_filtered[required_columns])
         return
     
     # If too long, downsample to reduce frames
@@ -433,7 +478,7 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title):
                 showlegend=True # Always show legend
             ))
 
-    # **Fix: Only show the plot if at least one trace is present**
+    # Only show the plot if at least one trace is present
     if len(fig.data) > 0:
         # Update layout for better appearance
         fig.update_layout(
@@ -447,4 +492,37 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title):
         st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": True})
     else:
         st.warning("Please select at least one checkbox to display the graph.")
+
+
+# 3.6. Plot or show tables
+def plot_or_show_table(df, column_name, start_date, end_date, frequency):
+    df_filtered = filter_data_by_frequency(df, start_date, end_date, frequency)
+    
+    if df_filtered is None or df_filtered.empty:
+        st.warning("No data available for the selected period.")
+        return
+    
+    if column_name not in df_filtered.columns:
+        st.warning(f"Column '{column_name}' not found in the filtered data.")
+        return
+
+    if len(df_filtered) < 4:
+        # Not enough data points. Show DataFrame instead of plotting
+        st.dataframe(df_filtered[[column_name]])
+    else:
+        # Plot normal line chart
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=df_filtered.index, 
+            y=df_filtered[column_name], 
+            mode="lines", 
+            name=column_name
+        ))
+        fig.update_layout(
+            xaxis_title="Date",
+            yaxis_title=column_name,
+            height=500,
+            margin=dict(t=40, b=40, l=30, r=30),
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
