@@ -32,6 +32,11 @@ additional_graphs = {
                   'USD/AUD Exchange Rate', 'Unemployment Rate', 'Wage Growth YoY', 'ASX 200 Index'],
 }
 
+# 1.4. Predefined Plotly color cycle
+plotly_colors = [
+    "blue", "green", "red", "purple", "orange", "brown", "pink", "gray", "cyan", "magenta"
+]
+
 # 2. MANIPULATE DATA-------------------------------------
 # 2.1. Map ticket to maturity
 def get_maturity_name(col_name):
@@ -126,6 +131,22 @@ def find_moving_average_columns(df):
             ma_columns[ma] = matching_cols[0]  # Take the first match (assuming no duplicates)
 
     return ma_columns
+
+# 2.6. Dynamic downsampling based on length of data
+def adaptive_downsampling(df):
+    num_rows = len(df)
+    
+    # Dynamically determine downsampling factor
+    if num_rows > 5000:
+        step = max(2, num_rows // 500)  # Keeps about 500 rows
+    elif num_rows > 2000:
+        step = max(2, num_rows // 400)  # Keeps about 400 rows
+    elif num_rows > 1000:
+        step = max(2, num_rows // 300)  # Keeps about 300 rows
+    else:
+        return df  # No downsampling needed
+    
+    return df.iloc[::step]
     
 
 # 3. VISUALIZATION-------------------------------------
@@ -225,6 +246,9 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     # Rename columns to maturities
     maturity_labels = ["3M", "2Y", "5Y", "10Y", "30Y"]
     df_filtered = df_filtered.rename(columns=lambda col: get_maturity_name(col))
+
+    # If too long, downsample to reduce frames
+    df_filtered = adaptive_downsampling(df_filtered)
 
     # Convert to long format for Plotly
     df_long = df_filtered.reset_index().melt(id_vars="Date", var_name="Maturity", value_name="Yield")
@@ -364,12 +388,8 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
     # Display in Streamlit
     st.plotly_chart(fig)
 
-# 3.5. The 1st type of additional graphs: daily "Close" with SMAVG 50/100/200
-def plot_price_with_moving_averages(df, start_date, end_date, title):
-    # Find actual moving average columns dynamically
-    ma_columns = find_moving_average_columns(df)
-    required_columns = ["Close"] + list(ma_columns.values())
-    
+# 3.5. Draw plot with multiple lines
+def plot_multiple_lines(df, start_date, end_date, required_columns, title):
     # Filter data based on the selected date range
     df_filtered = filter_dataframe(df, start_date, end_date, required_columns)
     if df_filtered is None:
@@ -380,69 +400,48 @@ def plot_price_with_moving_averages(df, start_date, end_date, title):
         st.warning(f"No valid data available between {start_date} and {end_date}.")
         return
     
+    # If too long, downsample to reduce frames
+    df_filtered = adaptive_downsampling(df_filtered)
+    
     # Initialize session state for checkboxes
-    for key in ["ma50", "ma100", "ma200"]:
-        session_key = f"{key}_{start_date}_{end_date}_{title}"
+    for key in required_columns:
+        session_key = f"{key}_{title}"
         if session_key not in st.session_state:
-            st.session_state[session_key] = (key == "ma50")  # Default: MA50 is checked
+            st.session_state[session_key] = (key == required_columns[0])  # Default: First column is checked
     
     # Create plot
     fig = go.Figure()
 
-    # Always plot the 'Close' price
-    fig.add_trace(go.Scatter(
-        x=df_filtered.index, 
-        y=df_filtered["Close"], 
-        mode="lines", 
-        name="Close Price",
-        line=dict(color="black")
-    ))
+    # Dictionary to store checkbox states
+    checkbox_states = {}
 
-    # Checkboxes directly under the graph
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        show_ma50 = st.checkbox("50-day MA", key=f"ma50_{start_date}_{end_date}_{title}")
-    with col2:
-        show_ma100 = st.checkbox("100-day MA", key=f"ma100_{start_date}_{end_date}_{title}")
-    with col3:
-        show_ma200 = st.checkbox("200-day MA", key=f"ma200_{start_date}_{end_date}_{title}")
+    # Iterate over each column and create a checkbox dynamically
+    for col in required_columns:
+        checkbox_states[col] = st.checkbox(f"{col}", key=f"{col}_{title}")
 
-    # Add selected moving averages to the plot
-    if show_ma50 and "SMAVG (50)" in ma_columns:
-        fig.add_trace(go.Scatter(
-            x=df_filtered.index, 
-            y=df_filtered[ma_columns["SMAVG (50)"]], 
-            mode="lines", 
-            name="50-day MA",
-            line=dict(dash="dot", color="blue")
-        ))
+    # Add traces dynamically with different colors
+    for idx, (col, state) in enumerate(checkbox_states.items()):
+        if state:
+            fig.add_trace(go.Scatter(
+                x=df_filtered.index, 
+                y=df_filtered[col], 
+                mode="lines", 
+                name=col,
+                line=dict(color=plotly_colors[idx % len(plotly_colors)])  # Cycle colors
+            ))
 
-    if show_ma100 and "SMAVG (100)" in ma_columns:
-        fig.add_trace(go.Scatter(
-            x=df_filtered.index, 
-            y=df_filtered[ma_columns["SMAVG (100)"]], 
-            mode="lines", 
-            name="100-day MA",
-            line=dict(dash="dot", color="green")
-        ))
+    # **Fix: Only show the plot if at least one trace is present**
+    if len(fig.data) > 0:
+        # Update layout for better appearance
+        fig.update_layout(
+            xaxis_title="Date",
+            height=500,
+            margin=dict(t=40, b=40, l=30, r=30),
+            legend_title="Legend",
+        )
 
-    if show_ma200 and "SMAVG (200)" in ma_columns:
-        fig.add_trace(go.Scatter(
-            x=df_filtered.index, 
-            y=df_filtered[ma_columns["SMAVG (200)"]], 
-            mode="lines", 
-            name="200-day MA",
-            line=dict(dash="dot", color="red")
-        ))
-
-    # Update layout for better appearance
-    fig.update_layout(
-        xaxis_title="Date",
-        height=500,
-        margin=dict(t=40, b=40, l=30, r=30),
-        legend_title="Legend",
-    )
-
-    # Redraw the plot only when checkboxes change (avoiding full rerun)
-    st.plotly_chart(fig, use_container_width=True)
+        # Show the plot
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("Please select at least one checkbox to display the graph.")
 

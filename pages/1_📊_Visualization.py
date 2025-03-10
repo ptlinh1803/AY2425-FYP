@@ -94,6 +94,14 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
 
     # Try plotting 5Y yield with MA
-    st.markdown("##### **5-Year Government Bond Yield with Moving Averages**")
+    st.markdown("##### **5-Year Government Bond Yield with Moving Averages (NEW)**")
     df_5y = viz.filter_ticker_columns(df, "GJGB5")
-    viz.plot_price_with_moving_averages(df_5y, start_date, end_date, "Japan Gov Bond Yield 5Y Maturity")
+    ma_columns = viz.find_moving_average_columns(df_5y)
+    required_columns = ["Close"] + list(ma_columns.values())
+    viz.plot_multiple_lines(df_5y, start_date, end_date, required_columns, "Japan Gov Bond Yield 5Y Maturity (NEW)")
+
+    # Try plotting Japan Swap
+    st.markdown("##### **Japan Swap Rate (NEW)**")
+    df_swap = viz.load_data("data/combined_data/japan_swap_combined.csv")
+    required_columns_swap = ["JYSOC_Close", "JYSO2_Close", "JYSO5_Close", "JYSO10_Close", "JYSO30_Close"]
+    viz.plot_multiple_lines(df_swap, start_date, end_date, required_columns_swap, "Japan Swap Rate (NEW)")
