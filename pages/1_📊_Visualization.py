@@ -83,9 +83,17 @@ if df is not None:
 st.divider()
 st.header("Visualization for a Selected Period")
 
-# Draw yield curve heatmap
 if "invalid_date" not in st.session_state or st.session_state.invalid_date == False:
+    # Yield curve heat map
     viz.plot_yield_curve_heatmap(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
+    
+    # 3D yield curve
     viz.plot_3d_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
+    
+    # Animated yield curve
     viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
 
+    # Try plotting 5Y yield with MA
+    st.markdown("##### **5-Year Government Bond Yield with Moving Averages**")
+    df_5y = viz.filter_ticker_columns(df, "GJGB5")
+    viz.plot_price_with_moving_averages(df_5y, start_date, end_date, "Japan Gov Bond Yield 5Y Maturity")

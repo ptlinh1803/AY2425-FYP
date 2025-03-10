@@ -4,21 +4,22 @@ from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Set min date for each country
+# 1. GLOBAL VARIABLES-------------------------------------
+# 1.1. Set min date for each country
 min_date = {
     "Japan": datetime(2000, 1, 4),
     "China": datetime(2005, 6, 8),
     "Australia": datetime(2000, 1, 4),
 }
 
-# Yield column names
+# 1.2. Yield column names
 yield_columns = {
     "Japan": ["GJTB3MO_Close", "GJGB2_Close", "GJGB5_Close", "GJGB10_Close", "GJGB30_Close"],
     "China": ['GCNY3M_Close', 'GCNY2YR_Close', 'GCNY5YR_Close', 'GCNY10YR_Close', 'GCNY30YR_Close'],
     "Australia": ['GACGB3M_Close', 'GACGB2_Close', 'GACGB5_Close', 'GACGB10_Close', 'GACGB30_Close'],
 }
 
-# Additional graphs
+# 1.3. Additional graphs
 additional_graphs = {
     "Japan": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield', 
               'JPY Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
@@ -31,7 +32,8 @@ additional_graphs = {
                   'USD/AUD Exchange Rate', 'Unemployment Rate', 'Wage Growth YoY', 'ASX 200 Index'],
 }
 
-# Map ticket to maturity
+# 2. MANIPULATE DATA-------------------------------------
+# 2.1. Map ticket to maturity
 def get_maturity_name(col_name):
     mappings = {
         "3M": "3M",
@@ -46,7 +48,7 @@ def get_maturity_name(col_name):
             return value
     return col_name  # Return original if no match
 
-# Load data
+# 2.2. Load data from file path
 @st.cache_data
 def load_data(file_path):
     try:
@@ -69,9 +71,65 @@ def load_data(file_path):
     except FileNotFoundError:
         st.error(f"File not found: {file_path}")
         return None
+
+# 2.3. For some data, the columns are prefixed with the ticker symbol 
+@st.cache_data
+def filter_ticker_columns(df, ticker):
+    """
+    Extracts columns containing the given ticker and removes the ticker prefix from column names.
+    """
+    selected_columns = [col for col in df.columns if ticker in col]
+    df_filtered = df[selected_columns].copy()
+    df_filtered.columns = [col.replace(f"{ticker}_", "") for col in selected_columns]
+
+    return df_filtered
+
+# 2.4. Filter data based on selected date range and columns
+@st.cache_data
+def filter_dataframe(df, start_date, end_date, required_columns=None):
+    """
+    Filters data based on selected date range and keeps only the specified columns.
+
+    Args:
+        df (pd.DataFrame): The input dataframe.
+        start_date (datetime): Start date for filtering.
+        end_date (datetime): End date for filtering.
+        required_columns (list, optional): List of required columns to keep. If None, keeps all columns.
+
+    Returns:
+        tuple: (filtered DataFrame, missing_columns list)
+    """
+
+    # If required_columns is None, keep all columns
+    if required_columns is None:
+        required_columns = df.columns.tolist()
+
+    # Check for missing columns
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        st.error(f"Missing required columns: {', '.join(missing_columns)}")
+        return None
+
+    # Filter data by date range and selected columns
+    df_filtered = df.loc[start_date:end_date, required_columns].dropna(how="all")
+
+    return df_filtered
+
+# 2.5. Find moving average columns (column names are not consistent)
+def find_moving_average_columns(df):
+    ma_patterns = ["SMAVG (50)", "SMAVG (100)", "SMAVG (200)"]
+    ma_columns = {}
+
+    for ma in ma_patterns:
+        matching_cols = [col for col in df.columns if ma in col]
+        if matching_cols:
+            ma_columns[ma] = matching_cols[0]  # Take the first match (assuming no duplicates)
+
+    return ma_columns
     
 
-# Plot the bond yield curve for a selected day
+# 3. VISUALIZATION-------------------------------------
+# 3.1. Plot the bond yield curve for a selected day
 def plot_yield_curve(df, selected_date, country):
     if country not in yield_columns:
         st.error("Yield columns for this country are not defined.")
@@ -111,11 +169,14 @@ def plot_yield_curve(df, selected_date, country):
                   labels={"Maturity": "Bond Maturity", "Yield (%)": "Yield (%)"})
 
     fig.update_traces(marker_size=8, hoverinfo="x+y", mode="lines+markers")
+    fig.update_layout(
+        title_font=dict(size=18)
+    )
 
     st.plotly_chart(fig)
 
 
-# Plot the bond yield curve heatmap for a selected period
+# 3.2. Plot the bond yield curve heatmap for a selected period
 def plot_yield_curve_heatmap(df, country, start_date, end_date):
     # Ensure the selected country exists in the yield columns dictionary
     if country not in yield_columns:
@@ -142,11 +203,14 @@ def plot_yield_curve_heatmap(df, country, start_date, end_date):
                     color_continuous_scale="Blues",  # Darker blue = Higher yield
                     labels={"color": "Yield (%)"},
                     title=f"{country} Government Bond Yield Curve (Heatmap) from {start_date} to {end_date}")
-
+    
+    fig.update_layout(
+        title_font=dict(size=18)
+    )
     # Show the heatmap
     st.plotly_chart(fig)
 
-# Plot the animated bond yield curve for a selected period
+# 3.3. Plot the animated bond yield curve for a selected period
 def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     if country not in yield_columns:
         st.error("Invalid country selection.")
@@ -217,6 +281,7 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     # Update layout for a better look
     fig.update_layout(
         title=f"{country} Yield Curve Animation from {start_date} to {end_date}",
+        title_font=dict(size=18),
         autosize=True,
         height=600,
         margin=dict(t=70, b=90, l=20, r=20),
@@ -240,7 +305,7 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     # Display in Streamlit
     st.plotly_chart(fig)
 
-# Plot the 3D yield curve surface
+# 3.4. Plot the 3D yield curve surface
 def plot_3d_yield_curve(df, country, start_date, end_date):
     if country not in yield_columns:
         st.error("Invalid country selection.")
@@ -280,6 +345,7 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
     # Update layout for better readability
     fig.update_layout(
         title=f"{country} Yield Curve 3D Surface from {start_date} to {end_date}",
+        title_font=dict(size=18),
         autosize=True,
         height=700,
         margin=dict(l=0, r=0, b=10, t=40),
@@ -297,3 +363,86 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
 
     # Display in Streamlit
     st.plotly_chart(fig)
+
+# 3.5. The 1st type of additional graphs: daily "Close" with SMAVG 50/100/200
+def plot_price_with_moving_averages(df, start_date, end_date, title):
+    # Find actual moving average columns dynamically
+    ma_columns = find_moving_average_columns(df)
+    required_columns = ["Close"] + list(ma_columns.values())
+    
+    # Filter data based on the selected date range
+    df_filtered = filter_dataframe(df, start_date, end_date, required_columns)
+    if df_filtered is None:
+        # Missing columns already handled in filter_dataframe()
+        return
+    
+    if df_filtered.empty:
+        st.warning(f"No valid data available between {start_date} and {end_date}.")
+        return
+    
+    # Initialize session state for checkboxes
+    for key in ["ma50", "ma100", "ma200"]:
+        session_key = f"{key}_{start_date}_{end_date}_{title}"
+        if session_key not in st.session_state:
+            st.session_state[session_key] = (key == "ma50")  # Default: MA50 is checked
+    
+    # Create plot
+    fig = go.Figure()
+
+    # Always plot the 'Close' price
+    fig.add_trace(go.Scatter(
+        x=df_filtered.index, 
+        y=df_filtered["Close"], 
+        mode="lines", 
+        name="Close Price",
+        line=dict(color="black")
+    ))
+
+    # Checkboxes directly under the graph
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        show_ma50 = st.checkbox("50-day MA", key=f"ma50_{start_date}_{end_date}_{title}")
+    with col2:
+        show_ma100 = st.checkbox("100-day MA", key=f"ma100_{start_date}_{end_date}_{title}")
+    with col3:
+        show_ma200 = st.checkbox("200-day MA", key=f"ma200_{start_date}_{end_date}_{title}")
+
+    # Add selected moving averages to the plot
+    if show_ma50 and "SMAVG (50)" in ma_columns:
+        fig.add_trace(go.Scatter(
+            x=df_filtered.index, 
+            y=df_filtered[ma_columns["SMAVG (50)"]], 
+            mode="lines", 
+            name="50-day MA",
+            line=dict(dash="dot", color="blue")
+        ))
+
+    if show_ma100 and "SMAVG (100)" in ma_columns:
+        fig.add_trace(go.Scatter(
+            x=df_filtered.index, 
+            y=df_filtered[ma_columns["SMAVG (100)"]], 
+            mode="lines", 
+            name="100-day MA",
+            line=dict(dash="dot", color="green")
+        ))
+
+    if show_ma200 and "SMAVG (200)" in ma_columns:
+        fig.add_trace(go.Scatter(
+            x=df_filtered.index, 
+            y=df_filtered[ma_columns["SMAVG (200)"]], 
+            mode="lines", 
+            name="200-day MA",
+            line=dict(dash="dot", color="red")
+        ))
+
+    # Update layout for better appearance
+    fig.update_layout(
+        xaxis_title="Date",
+        height=500,
+        margin=dict(t=40, b=40, l=30, r=30),
+        legend_title="Legend",
+    )
+
+    # Redraw the plot only when checkboxes change (avoiding full rerun)
+    st.plotly_chart(fig, use_container_width=True)
+
