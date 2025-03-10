@@ -148,15 +148,12 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     # Rename columns to maturities
     maturity_labels = ["3M", "2Y", "5Y", "10Y", "30Y"]
     df_filtered = df_filtered.rename(columns=lambda col: get_maturity_name(col))
-    df_static = df_static.rename(columns=lambda col: get_maturity_name(col))
 
     # Convert to long format for Plotly
     df_long = df_filtered.reset_index().melt(id_vars="Date", var_name="Maturity", value_name="Yield")
-    df_static_long = df_static.reset_index().melt(id_vars="Date", var_name="Maturity", value_name="Yield")
 
     # Ensure maturities are in correct order
     df_long["Maturity"] = pd.Categorical(df_long["Maturity"], categories=maturity_labels, ordered=True)
-    df_static_long["Maturity"] = pd.Categorical(df_static_long["Maturity"], categories=maturity_labels, ordered=True)
 
     # Convert Date to string to ensure proper animation frame handling
     df_long["Date"] = df_long["Date"].dt.strftime('%d-%m-%Y')
@@ -165,9 +162,17 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     y_min = df_long["Yield"].min()
     y_max = df_long["Yield"].max()
 
+    if df_static is not None and not df_static.empty:
+        df_static = df_static.rename(columns=lambda col: get_maturity_name(col))
+        df_static_long = df_static.reset_index().melt(id_vars="Date", var_name="Maturity", value_name="Yield")
+        df_static_long["Maturity"] = pd.Categorical(df_static_long["Maturity"], categories=maturity_labels, ordered=True)
+        y_min = min(y_min, df_static_long["Yield"].min())
+        y_max = max(y_max, df_static_long["Yield"].max())
+
     # Apply a buffer
     y_buffer = (y_max - y_min) * 0.3  
     y_max_adjusted = y_max + y_buffer 
+    y_min_adjusted = y_min - y_buffer
 
     # Create the animated plot
     fig = px.line(
@@ -179,21 +184,22 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
         color_discrete_sequence=["cornflowerblue"],  # Animation curve color
         animation_frame="Date",
         animation_group="Maturity",
-        range_y=[y_min, y_max_adjusted],
+        range_y=[y_min_adjusted, y_max_adjusted],
         markers="*",
         hover_data={"Maturity": True, "Yield": True, "Date": True},
     )
 
-    # Add the static yield curve (selected date)
-    static_curve = df_static.iloc[0, :]
-    fig.add_trace(go.Scatter(
-        x=static_curve.index,
-        y=static_curve.values,
-        mode="lines+markers",
-        name=f"Static: {selected_date.strftime('%d-%m-%Y')}",
-        line=dict(color="red", width=2),
-        marker=dict(symbol="circle"),
-    ))
+    if df_static is not None and not df_static.empty:
+        # Add the static yield curve (selected date)
+        static_curve = df_static.iloc[0, :]
+        fig.add_trace(go.Scatter(
+            x=static_curve.index,
+            y=static_curve.values,
+            mode="lines+markers",
+            name=f"Static: {selected_date.strftime('%d-%m-%Y')}",
+            line=dict(color="red", width=2),
+            marker=dict(symbol="circle"),
+        ))
 
     # Update layout for a better look
     fig.update_layout(

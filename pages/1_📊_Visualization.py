@@ -18,6 +18,9 @@ default_end = datetime(2024, 10, 31)
 default_start = default_end - timedelta(days=30)
 
 # Add date selection to the sidebar
+st.sidebar.subheader("Select a Specific Date")
+selected_date = st.sidebar.date_input("Select a date", datetime(2024, 10, 31), min_value=min_date[country], max_value=datetime(2024, 10, 31))
+
 st.sidebar.subheader("Select Date Range")
 start_date = st.sidebar.date_input("Start Date", default_start, min_value=min_date[country], max_value=datetime(2024, 10, 31))
 end_date = st.sidebar.date_input("End Date", default_end, min_value=min_date[country], max_value=datetime(2024, 10, 31))
@@ -34,10 +37,7 @@ st.title(country)
 
 # 1. Visualization for 1 day:
 st.header("Visualization for 1 day")
-st.write(f"Select a specific day to see the Government Bond Yield Curve of {country} for that day.")
-
-# Default date (last day 31/10/2024)
-selected_date = st.date_input("Select a date", datetime(2024, 10, 31), min_value=min_date[country], max_value=datetime(2024, 10, 31))
+st.write(f"Select a date from the Sidebar to view the Government Bond Yield Curve of {country} on that day.")
 
 # Load and plot yield data
 file_path = f"data/combined_data/{country.lower()}_full_yields_only.csv"
