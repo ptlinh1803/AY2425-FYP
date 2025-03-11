@@ -177,6 +177,21 @@ def filter_data_by_frequency(df, start_date, end_date, frequency):
         ))]
     
     return df_filtered
+
+# 2.8. Format date/index column
+def format_date_column(df):
+    df_copy = df.copy()
+    try:
+        if "Date" in df_copy.columns:
+            # Try formatting the "Date" column
+            df_copy["Date"] = df_copy["Date"].dt.strftime("%d/%m/%Y")
+        elif isinstance(df_copy.index, pd.DatetimeIndex):
+            # Try formatting the index if it's a DatetimeIndex
+            df_copy.index = df_copy.index.strftime("%d/%m/%Y")
+    except Exception as e:
+        return df
+
+    return df_copy
     
 
 # 3. VISUALIZATION-------------------------------------
@@ -190,13 +205,14 @@ def plot_yield_curve(df, selected_date, country):
     df_filtered = df[df.index == pd.to_datetime(selected_date)]
 
     if df_filtered.empty:
-        st.warning(f"No data available for {selected_date.strftime('%d-%m-%Y')}")
+        st.warning(f"No data available for {selected_date.strftime('%d/%m/%Y')}")
         return
 
     # Keep only the selected yield columns
     selected_columns = [col for col in yield_columns[country] if col in df_filtered.columns]
     df_filtered = df_filtered[selected_columns]
-    st.dataframe(df_filtered)
+    df_filtered_copy = format_date_column(df_filtered)
+    st.dataframe(df_filtered_copy)
 
     # Extract available maturities & yields
     maturities = []
@@ -208,7 +224,7 @@ def plot_yield_curve(df, selected_date, country):
             yields.append(df_filtered.iloc[0][col])  # Yield value
 
     if not maturities:
-        st.warning(f"No yield data available for {selected_date.strftime('%d-%m-%Y')}")
+        st.warning(f"No yield data available for {selected_date.strftime('%d/%m/%Y')}")
         return
 
     # Create DataFrame for plotting
@@ -216,7 +232,7 @@ def plot_yield_curve(df, selected_date, country):
 
     # Plot using Plotly
     fig = px.line(plot_df, x="Maturity", y="Yield (%)", markers=True,
-                  title=f"{country} Government Bond Yield Curve on {selected_date.strftime('%d-%m-%Y')}",
+                  title=f"{country} Government Bond Yield Curve on {selected_date.strftime('%d/%m/%Y')}",
                   labels={"Maturity": "Bond Maturity", "Yield (%)": "Yield (%)"})
 
     fig.update_traces(marker_size=8, hoverinfo="x+y", mode="lines+markers")
@@ -253,7 +269,7 @@ def plot_yield_curve_heatmap(df, country, start_date, end_date):
                     aspect="auto",
                     color_continuous_scale="Blues",  # Darker blue = Higher yield
                     labels={"color": "Yield (%)"},
-                    title=f"{country} Government Bond Yield Curve (Heatmap) from {start_date} to {end_date}")
+                    title=f"{country} Government Bond Yield Curve (Heatmap) from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}")
     
     fig.update_layout(
         title_font=dict(size=18)
@@ -287,7 +303,7 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
     df_long["Maturity"] = pd.Categorical(df_long["Maturity"], categories=maturity_labels, ordered=True)
 
     # Convert Date to string to ensure proper animation frame handling
-    df_long["Date"] = df_long["Date"].dt.strftime('%d-%m-%Y')
+    df_long["Date"] = df_long["Date"].dt.strftime('%d/%m/%Y')
 
     # Calculate dynamic Y-axis range with a small buffer
     y_min = df_long["Yield"].min()
@@ -327,14 +343,14 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
             x=static_curve.index,
             y=static_curve.values,
             mode="lines+markers",
-            name=f"Static: {selected_date.strftime('%d-%m-%Y')}",
+            name=f"Static: {selected_date.strftime('%d/%m/%Y')}",
             line=dict(color="red", width=2),
             marker=dict(symbol="circle"),
         ))
 
     # Update layout for a better look
     fig.update_layout(
-        title=f"{country} Yield Curve Animation from {start_date} to {end_date}",
+        title=f"{country} Yield Curve Animation from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}",
         title_font=dict(size=18),
         autosize=True,
         height=600,
@@ -398,7 +414,7 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
 
     # Update layout for better readability
     fig.update_layout(
-        title=f"{country} Yield Curve 3D Surface from {start_date} to {end_date}",
+        title=f"{country} Yield Curve 3D Surface from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}",
         title_font=dict(size=18),
         autosize=True,
         height=700,
@@ -427,12 +443,12 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title, is_fi
         df_filtered = df # df is already filtered
     
     if df_filtered is None or df_filtered.empty:
-        st.warning(f"No valid data available between {start_date} and {end_date}.")
+        st.warning(f"No valid data available between {start_date.strftime('%d/%m/%Y')} and {end_date.strftime('%d/%m/%Y')}.")
         return
     
     if len(df_filtered) < 4:
         # Not enough data points. Show DataFrame instead of plotting
-        st.dataframe(df_filtered[required_columns])
+        st.dataframe(format_date_column(df_filtered[required_columns]))
         return
     
     # If too long, downsample to reduce frames
@@ -501,7 +517,7 @@ def plot_or_show_table(df, column_name, start_date, end_date, frequency):
 
     if len(df_filtered) < 4:
         # Not enough data points. Show DataFrame instead of plotting
-        st.dataframe(df_filtered[[column_name]])
+        st.dataframe(format_date_column(df_filtered[[column_name]]))
     else:
         # Plot normal line chart
         fig = go.Figure()
