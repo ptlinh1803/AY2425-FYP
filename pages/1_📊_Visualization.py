@@ -106,15 +106,28 @@ if df is not None:
 st.header("Visualization for a Selected Period")
 
 if "invalid_date" not in st.session_state or st.session_state.invalid_date == False:
-    tab1, tab2, tab3 = st.tabs(["🌍 3D Yield Curve", "🔥 Yield Curve Heatmap", "🎞️ Yield Curve Animation"])
-    # 3D yield curve
+    tab1, tab2, tab3, tab4 = st.tabs(["📈 Yield Curve Trends", "🌍 3D Yield Curve", "🔥 Yield Curve Heatmap", "🎞️ Yield Curve Animation"])
+    # Line plot of yield curve trends
     with tab1:
-        viz.plot_3d_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
-    # Yield curve heat map 
+       title = f"{st.session_state.country} Government Bond Yield Trends by Maturity"
+       st.markdown(f"##### **{title}**")
+       required_columns = viz.yield_columns[st.session_state.country]
+       df_filtered_yields = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns=required_columns)
+       # Remove suffix _Close
+       required_columns = [col.replace("_Close", "") for col in required_columns]
+       df_filtered_yields.columns = [col.replace("_Close", "") for col in df_filtered_yields.columns]
+       viz.plot_multiple_lines(df_filtered_yields, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
+    # 3D yield curve
     with tab2:
+        st.markdown(f"##### **{st.session_state.country} Government Bond Yield Curve 3D Surface**")
+        viz.plot_3d_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
+    # Yield curve heatmap 
+    with tab3:
+        st.markdown(f"##### **{st.session_state.country} Government Bond Yield Curve Heatmap**")
         viz.plot_yield_curve_heatmap(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
     # Animated yield curve
-    with tab3:
+    with tab4:
+        st.markdown(f"##### **{st.session_state.country} Government Bond Yield Curve Animation**")
         viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
 
     # Try plotting 5Y yield with MA

@@ -269,9 +269,10 @@ def plot_yield_curve_heatmap(df, country, start_date, end_date):
                     aspect="auto",
                     color_continuous_scale="Blues",  # Darker blue = Higher yield
                     labels={"color": "Yield (%)"},
-                    title=f"{country} Government Bond Yield Curve (Heatmap) from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}")
+                    )
     
     fig.update_layout(
+        title="",
         title_font=dict(size=18)
     )
     # Show the heatmap
@@ -350,7 +351,7 @@ def plot_animated_yield_curve(df, country, start_date, end_date, selected_date):
 
     # Update layout for a better look
     fig.update_layout(
-        title=f"{country} Yield Curve Animation from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}",
+        title="",
         title_font=dict(size=18),
         autosize=True,
         height=600,
@@ -414,7 +415,7 @@ def plot_3d_yield_curve(df, country, start_date, end_date):
 
     # Update layout for better readability
     fig.update_layout(
-        title=f"{country} Yield Curve 3D Surface from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}",
+        title="",
         title_font=dict(size=18),
         autosize=True,
         height=700,
@@ -458,7 +459,7 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title, is_fi
     for key in required_columns:
         session_key = f"{key}_{title}"
         if session_key not in st.session_state:
-            st.session_state[session_key] = (key == required_columns[0])  # Default: First column is checked
+            st.session_state[session_key] = True # Default: show all traces
     
     # Create plot
     fig = go.Figure()
