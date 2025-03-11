@@ -134,9 +134,10 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     for sg in selected_graphs:
         # Individual maturity
         if sg in viz.yield_mapping:
-            st.markdown(f"##### **{st.session_state.country} {sg}**")
+            title = f"{st.session_state.country} {viz.yield_mapping[sg]['title']}"
+            st.markdown(f"##### **{title}**")
             df_y = viz.filter_ticker_columns(df, viz.yield_mapping[sg][st.session_state.country])
             ma_columns = viz.find_moving_average_columns(df_y)
             required_columns = ["Close"] + list(ma_columns.values())
-            viz.plot_multiple_lines(df_y, st.session_state.start_date, st.session_state.end_date, required_columns, f"{st.session_state.country} {sg}")
+            viz.plot_multiple_lines(df_y, st.session_state.start_date, st.session_state.end_date, required_columns, title)
 

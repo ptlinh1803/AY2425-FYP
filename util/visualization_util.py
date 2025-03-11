@@ -15,13 +15,13 @@ yield_columns = {
 # 1.2. Additional graphs
 additional_graphs = {
     "Japan": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield', 
-              'JPY Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
+              'Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
               'Gov Debt % GDP', 'USD/JPY Exchange Rate', 'Unemployment Rate', 'Nikkei 225 Index'],
     "China": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield',
-              'CNY Swap Rates', 'Loan Prime Rate', 'SHIBOR Fixing Rate', 'CPI YoY', 'GDP YoY',
+              'Swap Rates', 'Loan Prime Rate', 'SHIBOR Fixing Rate', 'CPI YoY', 'GDP YoY',
               'Gov Debt % GDP', 'USD/CNY Exchange Rate', 'Unemployment Rate', 'CSI 300 Index'],
     "Australia": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield',
-                  'AUD Swap Rates', 'Cash Rate Target', 'CPI YoY', 'GDP YoY','Gov Debt % GDP', 
+                  'Swap Rates', 'Cash Rate Target', 'CPI YoY', 'GDP YoY','Gov Debt % GDP', 
                   'USD/AUD Exchange Rate', 'Unemployment Rate', 'Wage Growth YoY', 'ASX 200 Index'],
 }
 
@@ -35,27 +35,32 @@ yield_mapping = {
     '3M Gov Yield': {
         'Japan': 'GJTB3MO',
         'China': 'GCNY3M',
-        'Australia': 'GACGB3M'
+        'Australia': 'GACGB3M',
+        'title': '3-Month Government Bond Yield Over Time'
     },
     '2Y Gov Yield': {
         'Japan': 'GJGB2',
         'China': 'GCNY2YR',
-        'Australia': 'GACGB2'
+        'Australia': 'GACGB2',
+        'title': '2-Year Government Bond Yield Over Time'
     },
     '5Y Gov Yield': {
         'Japan': 'GJGB5',
         'China': 'GCNY5YR',
-        'Australia': 'GACGB5'
+        'Australia': 'GACGB5',
+        'title': '5-Year Government Bond Yield Over Time'
     },
     '10Y Gov Yield': {
         'Japan': 'GJGB10',
         'China': 'GCNY10YR',
-        'Australia': 'GACGB10'
+        'Australia': 'GACGB10',
+        'title': '10-Year Government Bond Yield Over Time'
     },
     '30Y Gov Yield': {
         'Japan': 'GJGB30',
         'China': 'GCNY30YR',
-        'Australia': 'GACGB30'
+        'Australia': 'GACGB30',
+        'title': '30-Year Government Bond Yield Over Time'
     },
 }
 
