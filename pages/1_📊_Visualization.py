@@ -26,8 +26,6 @@ if "selected_date" not in st.session_state:
     st.session_state.selected_date = default_end
 if "invalid_date" not in st.session_state:
     st.session_state.invalid_date = False
-if "selected_graphs" not in st.session_state:
-    st.session_state.selected_graphs = []
 
 # Callback function to update session state
 def update_country():
@@ -41,9 +39,6 @@ def update_start_date():
 
 def update_end_date():
     st.session_state.end_date = datetime.combine(st.session_state["end_date_picker"], datetime.min.time())
-
-def update_selected_graphs():
-    st.session_state.selected_graphs = st.session_state["graph_picker"]
 
 # Dropdown to select country
 st.sidebar.selectbox(
@@ -85,13 +80,12 @@ else:
     st.session_state.invalid_date = False
 
 # Sidebar: Additional Graph Selection
-st.sidebar.multiselect(
+selected_graphs = st.sidebar.multiselect(
     "Choose up to 5 additional insights to explore in this period:",
     options=viz.additional_graphs[st.session_state.country],
-    default=st.session_state.selected_graphs,
+    default=[],
     max_selections=5,
-    key="graph_picker",
-    on_change=update_selected_graphs
+    key="graph_picker"
 )
 
 # Main page -------------------------------------
