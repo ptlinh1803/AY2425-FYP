@@ -109,18 +109,19 @@ if df is not None:
     viz.plot_yield_curve(df, st.session_state.selected_date, st.session_state.country)
 
 # 2. Visualization for a period:
-st.divider()
 st.header("Visualization for a Selected Period")
 
 if "invalid_date" not in st.session_state or st.session_state.invalid_date == False:
-    # Yield curve heat map
-    viz.plot_yield_curve_heatmap(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
-    
+    tab1, tab2, tab3 = st.tabs(["🌍 3D Yield Curve", "🔥 Yield Curve Heatmap", "🎞️ Yield Curve Animation"])
     # 3D yield curve
-    viz.plot_3d_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
-    
+    with tab1:
+        viz.plot_3d_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
+    # Yield curve heat map 
+    with tab2:
+        viz.plot_yield_curve_heatmap(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date)
     # Animated yield curve
-    viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
+    with tab3:
+        viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
 
     # Try plotting 5Y yield with MA
     st.markdown("##### **5-Year Government Bond Yield with Moving Averages (NEW)**")
