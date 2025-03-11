@@ -15,13 +15,13 @@ yield_columns = {
 # 1.2. Additional graphs
 additional_graphs = {
     "Japan": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield', 
-              'Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
+              'JPY Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
               'Gov Debt % GDP', 'USD/JPY Exchange Rate', 'Unemployment Rate', 'Nikkei 225 Index'],
     "China": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield',
-              'Swap Rates', 'Loan Prime Rate', 'SHIBOR Fixing Rate', 'CPI YoY', 'GDP YoY',
+              'CNY Swap Rates', 'Loan Prime Rate', 'SHIBOR Fixing Rate', 'CPI YoY', 'GDP YoY',
               'Gov Debt % GDP', 'USD/CNY Exchange Rate', 'Unemployment Rate', 'CSI 300 Index'],
     "Australia": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield',
-                  'Swap Rates', 'Cash Rate Target', 'CPI YoY', 'GDP YoY','Gov Debt % GDP', 
+                  'AUD Swap Rates', 'Cash Rate Target', 'CPI YoY', 'GDP YoY','Gov Debt % GDP', 
                   'USD/AUD Exchange Rate', 'Unemployment Rate', 'Wage Growth YoY', 'ASX 200 Index'],
 }
 
@@ -62,6 +62,71 @@ yield_mapping = {
         'Australia': 'GACGB30',
         'title': '30-Year Government Bond Yield Over Time'
     },
+}
+
+# 1.5. multiple lines mapping
+multiple_lines_mapping = {
+    'JPY Swap Rates': {
+        "title": "JPY Overnight Index Swap (OIS) Rates Across Maturities",
+        "file_path": "data/combined_data/japan_swap_combined.csv",
+        "required_columns": ["JYSOC_Close", "JYSO2_Close", "JYSO5_Close", "JYSO10_Close", "JYSO30_Close"]
+    },
+    'TIBOR Fixing Rates': {
+        "title": "Japan TIBOR Fixing Rates Across Maturities",
+        "file_path": "data/combined_data/japan_tibor_fixing_rate_df_combined.csv",
+        "required_columns": ["TI0001M_Ask Price", "TI0003M_Ask Price", "TI0006M_Ask Price", "TI0012M_Ask Price"]
+    },
+    'CNY Swap Rates': {
+        "title": "CNY Interest Rate Swaps (IRS) on 7-Day Repo",
+        "file_path": "data/combined_data/china_swap_combined.csv",
+        "required_columns": ["CCSWOC_Close", "CCSWO2_Close", "CCSWO5_Close", "CCSWO10_Close"]
+    },
+    'SHIBOR Fixing Rate': {
+        "title": "Shanghai Interbank Offered Rate (SHIBOR) Trends Over Time",
+        "file_path": "data/combined_data/china_shibor_fixing_rate_combined.csv",
+        "required_columns": ["SHIF1Y_Close", "SHIF3M_Close"]
+    },
+    'AUD Swap Rates': {
+        "title": "AUD Interest Rate Swaps (IRS) vs. 6M Benchmark",
+        "file_path": "data/combined_data/australia_swap_combined.csv",
+        "required_columns": ["ADSWAP2_Close", "ADSWAP5_Close", "ADSWAP10_Close", "ADSWAP30_Close"]
+    }
+}
+
+# 'Loan Prime Rate' - filtered before plotting
+
+# 1.6. multiple lines mapping with MA
+multiple_lines_mapping_with_ma = {
+    'TONAR Rate': {
+    },
+    'USD/JPY Exchange Rate': {
+    },
+    'Nikkei 225 Index': {
+    },
+    'USD/CNY Exchange Rate': {
+    },
+    'CSI 300 Index': {
+    },
+    'USD/AUD Exchange Rate': {
+    },
+    'ASX 200 Index': {
+    }
+}
+
+# 1.7. others mapping
+others_mapping = {
+    'CPI YoY': {
+    },
+    'GDP YoY': {
+    },
+    'Gov Debt % GDP': {
+    },
+    'Unemployment Rate': {
+    },
+    'Wage Growth YoY': {
+    },
+    'Cash Rate Target': {
+    }
 }
 
 # 2. MANIPULATE DATA-------------------------------------

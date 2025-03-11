@@ -130,6 +130,7 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
         st.markdown(f"##### **{st.session_state.country} Government Bond Yield Curve Animation**")
         viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
 
+    st.divider()
     # Plot additional graphs
     for sg in selected_graphs:
         # Individual maturity
@@ -140,4 +141,28 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             ma_columns = viz.find_moving_average_columns(df_y)
             required_columns = ["Close"] + list(ma_columns.values())
             viz.plot_multiple_lines(df_y, st.session_state.start_date, st.session_state.end_date, required_columns, title)
+        
+        # Special case for China Loan Prime Rate
+        elif st.session_state.country == "China" and sg == "Loan Prime Rate":
+            st.markdown("##### **China Loan Prime Rate**")
+            df_china_loan = viz.load_data("data/combined_data/china_loan_prime_rate_combined.csv")
+            df_china_loan_filtered = viz.filter_data_by_frequency(df_china_loan, st.session_state.start_date, st.session_state.end_date, "monthly")
+            required_columns_china_loan = ["CHLRLPR1_Last Price", "CHLRLPR5_Last Price"]
+            viz.plot_multiple_lines(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, required_columns_china_loan, "China Loan Prime Rate", is_filtered=True)
+        
+        # Multiple lines without MA
+        elif sg in viz.multiple_lines_mapping:
+            title = viz.multiple_lines_mapping[sg]["title"]
+            st.markdown(f"##### **{title}**")
+            df_temp = viz.load_data(viz.multiple_lines_mapping[sg]["file_path"])
+            required_columns = viz.multiple_lines_mapping[sg]["required_columns"]
+            viz.plot_multiple_lines(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns, title)
+
+        # Multiple lines with MA
+        elif sg in viz.multiple_lines_ma_mapping:
+            pass
+
+        # Others
+        elif sg in viz.other_graphs:
+            pass
 
