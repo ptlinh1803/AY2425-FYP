@@ -93,23 +93,35 @@ multiple_lines_mapping = {
     }
 }
 
-# 'Loan Prime Rate' - filtered before plotting
-
 # 1.6. multiple lines mapping with MA
 multiple_lines_mapping_with_ma = {
     'TONAR Rate': {
+        "title": "TONAR: Japan's Unsecured Overnight Call Rate Movements Over Time",
+        "file_path": "data/others/MUTKCALM Bank of Japan Final Result - Unsecured Overnight Call Rate TONAR.xlsx",
     },
     'USD/JPY Exchange Rate': {
+        "title": "'USD/JPY Exchange Rate",
+        "file_path": "data/others/USDJPY Exchange Rate USD-JPY.xlsx",
     },
     'Nikkei 225 Index': {
+        "title": "Nikkei 225 Index",
+        "file_path": "data/others/NKY Nikkei 225.xlsx",
     },
     'USD/CNY Exchange Rate': {
+        "title": "USD/CNY Exchange Rate",
+        "file_path": "data/others/USDCNY Exchange Rate USD-CNY.xlsx",
     },
     'CSI 300 Index': {
+        "title": "CSI 300 Index",
+        "file_path": "data/others/SHSZ300 CSI 300 Index.xlsx",
     },
     'USD/AUD Exchange Rate': {
+        "title": "USD/AUD Exchange Rate",
+        "file_path": "data/others/AUDUSD Exchange Rate USD-AUD.xlsx",
     },
     'ASX 200 Index': {
+        "title": "ASX 200 Index",
+        "file_path": "data/others/AS51 ASX 200 Index.xlsx",
     }
 }
 
@@ -163,6 +175,7 @@ def load_data(file_path):
 
         # Set Date as index
         df.set_index("Date", inplace=True)
+        df = df.sort_index()
 
         return df
     except FileNotFoundError:

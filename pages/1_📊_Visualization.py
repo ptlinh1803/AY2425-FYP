@@ -159,8 +159,14 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             viz.plot_multiple_lines(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns, title)
 
         # Multiple lines with MA
-        elif sg in viz.multiple_lines_ma_mapping:
-            pass
+        elif sg in viz.multiple_lines_mapping_with_ma:
+            title = viz.multiple_lines_mapping_with_ma[sg]["title"]
+            st.markdown(f"##### **{title}**")
+            df_temp = viz.load_data(viz.multiple_lines_mapping_with_ma[sg]["file_path"])
+            df_temp.columns = [col.replace("on Close", "").strip() for col in df_temp.columns]
+            ma_columns = viz.find_moving_average_columns(df_temp)
+            required_columns = ["Close"] + list(ma_columns.values())
+            viz.plot_multiple_lines(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns, title)
 
         # Others
         elif sg in viz.other_graphs:
