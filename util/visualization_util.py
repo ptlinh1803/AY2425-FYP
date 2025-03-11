@@ -30,6 +30,35 @@ plotly_colors = [
     "blue", "green", "red", "purple", "orange", "brown", "pink", "gray", "cyan", "magenta"
 ]
 
+# 1.4. Yield mapping
+yield_mapping = {
+    '3M Gov Yield': {
+        'Japan': 'GJTB3MO',
+        'China': 'GCNY3M',
+        'Australia': 'GACGB3M'
+    },
+    '2Y Gov Yield': {
+        'Japan': 'GJGB2',
+        'China': 'GCNY2YR',
+        'Australia': 'GACGB2'
+    },
+    '5Y Gov Yield': {
+        'Japan': 'GJGB5',
+        'China': 'GCNY5YR',
+        'Australia': 'GACGB5'
+    },
+    '10Y Gov Yield': {
+        'Japan': 'GJGB10',
+        'China': 'GCNY10YR',
+        'Australia': 'GACGB10'
+    },
+    '30Y Gov Yield': {
+        'Japan': 'GJGB30',
+        'China': 'GCNY30YR',
+        'Australia': 'GACGB30'
+    },
+}
+
 # 2. MANIPULATE DATA-------------------------------------
 # 2.1. Map ticket to maturity
 def get_maturity_name(col_name):

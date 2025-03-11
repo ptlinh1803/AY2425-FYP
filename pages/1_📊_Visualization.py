@@ -130,37 +130,13 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
         st.markdown(f"##### **{st.session_state.country} Government Bond Yield Curve Animation**")
         viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
 
-    # Try plotting 5Y yield with MA
-    st.markdown("##### **5-Year Government Bond Yield with Moving Averages (NEW)**")
-    df_5y = viz.filter_ticker_columns(df, "GJGB5")
-    ma_columns = viz.find_moving_average_columns(df_5y)
-    required_columns = ["Close"] + list(ma_columns.values())
-    viz.plot_multiple_lines(df_5y, st.session_state.start_date, st.session_state.end_date, required_columns, "Japan Gov Bond Yield 5Y Maturity (NEW)")
+    # Plot additional graphs
+    for sg in selected_graphs:
+        # Individual maturity
+        if sg in viz.yield_mapping:
+            st.markdown(f"##### **{st.session_state.country} {sg}**")
+            df_y = viz.filter_ticker_columns(df, viz.yield_mapping[sg][st.session_state.country])
+            ma_columns = viz.find_moving_average_columns(df_y)
+            required_columns = ["Close"] + list(ma_columns.values())
+            viz.plot_multiple_lines(df_y, st.session_state.start_date, st.session_state.end_date, required_columns, f"{st.session_state.country} {sg}")
 
-    # Try plotting Japan Swap
-    st.markdown("##### **Japan Swap Rate (NEW)**")
-    df_swap = viz.load_data("data/combined_data/japan_swap_combined.csv")
-    required_columns_swap = ["JYSOC_Close", "JYSO2_Close", "JYSO5_Close", "JYSO10_Close", "JYSO30_Close"]
-    viz.plot_multiple_lines(df_swap, st.session_state.start_date, st.session_state.end_date, required_columns_swap, "Japan Swap Rate (NEW)")
-
-    # Try plotting Japan CPI (Quarterly)
-    st.markdown("##### **Japan CPI (Consumer Price Index) (NEW)**")
-    df_cpi = viz.load_data("data/others/EHPIJP Japan Consumer Price Index (YoY _).xlsx")
-    viz.plot_or_show_table(df_cpi, "Mid Price", st.session_state.start_date, st.session_state.end_date, "quarterly")
-
-    # Try plotting Japan Debt as % of GDP (Yearly)
-    st.markdown("##### **Japan Debt as % of GDP (NEW)**")
-    df_debt = viz.load_data("data/others/GDDBJAPN Japan Debt as a Percentage of GDP.xlsx")
-    viz.plot_or_show_table(df_debt, "Mid Price", st.session_state.start_date, st.session_state.end_date, "yearly")
-
-    # Try plotting China CPI (Monthly)
-    st.markdown("##### **China CPI (Consumer Price Index) (NEW)**")
-    df_china_cpi = viz.load_data("data/others/CNCPIYOY Daily China CPI YoY.xlsx")
-    viz.plot_or_show_table(df_china_cpi, "Last Price", st.session_state.start_date, st.session_state.end_date, "monthly")
-
-    # China Loan Prime Rate is monthly but have 2 lines (1Y and 5Y)
-    st.markdown("##### **China Loan Prime Rate (NEW)**")
-    df_china_loan = viz.load_data("data/combined_data/china_loan_prime_rate_combined.csv")
-    df_china_loan_filtered = viz.filter_data_by_frequency(df_china_loan, st.session_state.start_date, st.session_state.end_date, "monthly")
-    required_columns_china_loan = ["CHLRLPR1_Last Price", "CHLRLPR5_Last Price"]
-    viz.plot_multiple_lines(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, required_columns_china_loan, "China Loan Prime Rate (NEW)", is_filtered=True)
