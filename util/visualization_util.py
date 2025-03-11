@@ -5,21 +5,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # 1. GLOBAL VARIABLES-------------------------------------
-# 1.1. Set min date for each country
-min_date = {
-    "Japan": datetime(2000, 1, 4),
-    "China": datetime(2005, 6, 8),
-    "Australia": datetime(2000, 1, 4),
-}
-
-# 1.2. Yield column names
+# 1.1. Yield column names
 yield_columns = {
     "Japan": ["GJTB3MO_Close", "GJGB2_Close", "GJGB5_Close", "GJGB10_Close", "GJGB30_Close"],
     "China": ['GCNY3M_Close', 'GCNY2YR_Close', 'GCNY5YR_Close', 'GCNY10YR_Close', 'GCNY30YR_Close'],
     "Australia": ['GACGB3M_Close', 'GACGB2_Close', 'GACGB5_Close', 'GACGB10_Close', 'GACGB30_Close'],
 }
 
-# 1.3. Additional graphs
+# 1.2. Additional graphs
 additional_graphs = {
     "Japan": ['3M Gov Yield', '2Y Gov Yield', '5Y Gov Yield', '10Y Gov Yield', '30Y Gov Yield', 
               'JPY Swap Rates', 'TONAR Rate', 'TIBOR Fixing Rates', 'CPI YoY', 'GDP YoY', 
@@ -32,7 +25,7 @@ additional_graphs = {
                   'USD/AUD Exchange Rate', 'Unemployment Rate', 'Wage Growth YoY', 'ASX 200 Index'],
 }
 
-# 1.4. Predefined Plotly color cycle
+# 1.3. Predefined Plotly color cycle
 plotly_colors = [
     "blue", "green", "red", "purple", "orange", "brown", "pink", "gray", "cyan", "magenta"
 ]
