@@ -169,6 +169,15 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             viz.plot_multiple_lines(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns, title)
 
         # Others
-        elif sg in viz.other_graphs:
-            pass
+        elif sg in viz.others_mapping:
+            title = viz.others_mapping[sg]["title"]
+            file_path = viz.others_mapping[sg][st.session_state.country]["file_path"]
+            col_name = viz.others_mapping[sg][st.session_state.country]["col"]
+            frequency = viz.others_mapping[sg][st.session_state.country]["frequency"]
+            st.markdown(f"##### **{st.session_state.country} {title}**")
+            df_cpi = viz.load_data(file_path)
+            viz.plot_or_show_table(df_cpi, col_name, st.session_state.start_date, st.session_state.end_date, frequency)
+
+        else:
+            st.warning(f"⚠️ {sg} is not available for {st.session_state.country}.")
 

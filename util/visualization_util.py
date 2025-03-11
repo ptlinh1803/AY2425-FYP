@@ -128,16 +128,92 @@ multiple_lines_mapping_with_ma = {
 # 1.7. others mapping
 others_mapping = {
     'CPI YoY': {
+        "title": "Consumer Price Index (CPI) Year-on-Year Growth",
+        "Japan": {
+            "file_path": "data/others/EHPIJP Japan Consumer Price Index (YoY _).xlsx",
+            "col": "Mid Price",
+            "frequency": "quarterly"
+        },
+        "China": {
+            "file_path": "data/others/CNCPIYOY Daily China CPI YoY.xlsx",
+            "col": "Last Price",
+            "frequency": "monthly"
+        },
+        "Australia": {
+            "file_path": "data/others/AUCPIYOY Australia CPI All Items YoY (Quarterly).xlsx",
+            "col": "Last Price",
+            "frequency": "quarterly"
+        },
     },
     'GDP YoY': {
+        "title": "Gross Domestic Product (GDP) Year-on-Year Growth",
+        "Japan": {
+            "file_path": "data/others/JGDPNSAQ Japan GDP Real Chained NSA YoY_.xlsx",
+            "col": "Last Price",
+            "frequency": "quarterly"
+        },
+        "China": {
+            "file_path": "data/others/EHGDCN China Real Quarterly GDP (Annual YoY _).xlsx",
+            "col": "Mid Price",
+            "frequency": "quarterly"
+        },
+        "Australia": {
+            "file_path": "data/others/AUNAGDPY Australia GDP SA YoY.xlsx",
+            "col": "Last Price",
+            "frequency": "quarterly"
+        },
     },
     'Gov Debt % GDP': {
+        "title": "Government Debt as a Percentage of GDP",
+        "Japan": {
+            "file_path": "data/others/GDDBJAPN Japan Debt as a Percentage of GDP.xlsx",
+            "col": "Mid Price",
+            "frequency": "yearly"
+        },
+        "China": {
+            "file_path": "data/others/CHBGDGOP China Government Debt as Percentage of GDP.xlsx",
+            "col": "Mid Price",
+            "frequency": "yearly"
+        },
+        "Australia": {
+            "file_path": "data/others/GDDBAUSL Australia Debt as a Percentage of GDP.xlsx",
+            "col": "Mid Price",
+            "frequency": "yearly"
+        },
     },
     'Unemployment Rate': {
+        "title": "Unemployment Rate",
+        "Japan": {
+            "file_path": "data/others/EHUPJP Japan Unemployment Rate.xlsx",
+            "col": "Mid Price",
+            "frequency": "quarterly"
+        },
+        "China": {
+            "file_path": "data/others/EHSRUCN China Quarterly Surveyed Unemployment Rate.xlsx",
+            "col": "Mid Price",
+            "frequency": "quarterly"
+        },
+        "Australia": {
+            "file_path": "data/others/EHUPAU Australia Unemployment Rate.xlsx",
+            "col": "Mid Price",
+            "frequency": "quarterly"
+        },
     },
     'Wage Growth YoY': {
+        "title": "Hourly Wage Growth (Excluding Bonuses, Year-on-Year, Seasonally Adjusted)",
+        "Australia": {
+            "file_path": "data/others/AUWCYSA Australia Wage Cost Hourly Rates of Pay Ex Bonuses YoY SA.xlsx",
+            "col": "Last Price",
+            "frequency": "quarterly"
+        }
     },
     'Cash Rate Target': {
+        "title": "RBA Cash Rate Target",
+        "Australia": {
+            "file_path": "data/others/RBATCTR Australia RBA Cash Rate Target.xlsx",
+            "col": "Last Price",
+            "frequency": "monthly"
+        }
     }
 }
 
@@ -642,7 +718,6 @@ def plot_or_show_table(df, column_name, start_date, end_date, frequency):
         ))
         fig.update_layout(
             xaxis_title="Date",
-            yaxis_title=column_name,
             height=500,
             margin=dict(t=40, b=40, l=30, r=30),
         )
