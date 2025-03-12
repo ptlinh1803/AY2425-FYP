@@ -139,6 +139,9 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
 
     st.divider()
     # Plot additional graphs
+    if selected_graphs:
+        st.subheader("Additional Insights:")
+        
     for sg in selected_graphs:
         # Individual maturity
         if sg in viz.yield_mapping:
