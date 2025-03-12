@@ -175,12 +175,16 @@ def generate_multi_data_prompt(country, start_date, end_date, summary_for_prompt
 
 
 # 5. Given any prompt, generate OpenAI's response
-def get_openai_response(prompt):
+def get_openai_response(prompt, basic=False):
+    """
+    basic (bool): If True, use GPT-3.5 for a cheaper response; otherwise, use GPT-4o.
+    """
     try:
         client = openai.OpenAI(api_key=openai_api_key)
+        model = "gpt-3.5-turbo" if basic else "gpt-4o"
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=model,
             messages=[
                 {
                     "role": "system",

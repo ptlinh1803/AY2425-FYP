@@ -37,6 +37,7 @@ if "ai_summary_multi_response" not in st.session_state:
 # Callback function to update session state
 def update_country():
     st.session_state.country = st.session_state["country_picker"]
+    st.session_state.ai_summary_single_response = None
 
 def update_selected_date():
     st.session_state.selected_date = datetime.combine(st.session_state["selected_date_picker"], datetime.min.time())
@@ -128,7 +129,7 @@ if df is not None:
             # Call OpenAI API and get response
             prompt = openai_util.generate_prompt_for_a_single_day(df_filtered, st.session_state.selected_date, st.session_state.country)
             with st.status("🔄 Analyzing the Yield Curve...", expanded=False):
-                st.session_state.ai_summary_single_response = openai_util.get_openai_response(prompt)
+                st.session_state.ai_summary_single_response = openai_util.get_openai_response(prompt, basic=True)
 
 if st.session_state.ai_summary_single_response:
     # Display response in an expander
