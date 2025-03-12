@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import util.visualization_util as viz
+import util.openai_util as openai_util
 
 # VISUALIZATION PAGE
 st.set_page_config(
@@ -108,8 +109,8 @@ st.header("Visualization for a Selected Period")
 if "invalid_date" not in st.session_state or st.session_state.invalid_date == False:
     tab1, tab2, tab3, tab4 = st.tabs(["📈 Yield Curve Trends", "🌍 3D Yield Curve", "🔥 Yield Curve Heatmap", "🎞️ Yield Curve Animation"])
     # Line plot of yield curve trends
+    title = f"{st.session_state.country} Government Bond Yield Trends by Maturity"
     with tab1:
-       title = f"{st.session_state.country} Government Bond Yield Trends by Maturity"
        st.markdown(f"##### **{title}**")
        required_columns = viz.yield_columns[st.session_state.country]
        df_filtered_yields = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns=required_columns)
@@ -129,6 +130,12 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     with tab4:
         st.markdown(f"##### **{st.session_state.country} Government Bond Yield Curve Animation**")
         viz.plot_animated_yield_curve(df, st.session_state.country, st.session_state.start_date, st.session_state.end_date, st.session_state.selected_date)
+
+    # Summary of key trends
+    required_columns = viz.yield_columns[st.session_state.country]
+    df_filtered = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns)
+    with st.expander("📑 Key Trend Insights"):
+        st.markdown(openai_util.extract_key_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title))
 
     st.divider()
     # Plot additional graphs
