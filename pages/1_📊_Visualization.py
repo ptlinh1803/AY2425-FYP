@@ -179,7 +179,7 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     # Summary of key trends
     required_columns = viz.yield_columns[st.session_state.country]
     df_filtered = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns)
-    summary_yield_curve_key_trends = openai_util.extract_key_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title)
+    summary_yield_curve_key_trends = openai_util.summarize_basic_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title)
     summary_for_prompt.append(summary_yield_curve_key_trends)
     with st.expander("📑 Key Trend Insights"):
         st.markdown(summary_yield_curve_key_trends)

@@ -1,60 +1,24 @@
 import pandas as pd
+# Mapping of tickers to human-readable maturities
+ticker_mapping = {
+    "GJTB3MO_Close": "3M Yield",
+    "GJGB2_Close": "2Y Yield",
+    "GJGB5_Close": "5Y Yield",
+    "GJGB10_Close": "10Y Yield",
+    "GJGB30_Close": "30Y Yield",
+    "GCNY3M_Close": "3M Yield",
+    "GCNY2YR_Close": "2Y Yield",
+    "GCNY5YR_Close": "5Y Yield",
+    "GCNY10YR_Close": "10Y Yield",
+    "GCNY30YR_Close": "30Y Yield",
+    "GACGB3M_Close": "3M Yield",
+    "GACGB2_Close": "2Y Yield",
+    "GACGB5_Close": "5Y Yield",
+    "GACGB10_Close": "10Y Yield",
+    "GACGB30_Close": "30Y Yield",
 
-# 1. Extract key trends
-def extract_key_trends(df_filtered, start_date, end_date, title):
-    """
-    Given df_filtered (with only essential columns) and start_date, end_date, index = Date
-    extract key data for each columm: 
-    start, end, min, max, mean, median, std, changes, average_changes, trend reversals
-    maybe no need SMAVG columns
-    return text summary of each column
-    """
-    # Ensure Date is the index
-    df_filtered = df_filtered.loc[start_date:end_date]
-    
-    # Drop columns containing "SMAVG"
-    df_filtered = df_filtered.loc[:, ~df_filtered.columns.str.contains("SMAVG")]
-
-    if df_filtered is None or df_filtered.empty:
-        return "No data to analyze."
-
-    summary = []
-    summary.append(f"📊 **Analysis of {title} from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}:**\n")
-    
-    for col in df_filtered.columns:
-        series = df_filtered[col]
-        
-        start = series.dropna().iloc[0] if not series.dropna().empty else "Data Unavailable"
-        end = series.dropna().iloc[-1] if not series.dropna().empty else "Data Unavailable"
-        min_val = series.min()
-        max_val = series.max()
-        mean_val = series.mean()
-        median_val = series.median()
-        std_val = series.std()
-        change = end - start if isinstance(start, (int, float)) and isinstance(end, (int, float)) else "N/A"
-        percent_change = (change / start) * 100 if start != 0 else "N/A"
-        avg_change = series.diff().mean()
-        
-        # Identify trend reversals (sign change in first difference)
-        diff_series = series.diff().fillna(0)
-        reversals = df_filtered.index[diff_series.mul(diff_series.shift(-1)) < 0].tolist()
-
-        # Detect significant fluctuations (if max-min difference is large)
-        fluctuation = series.max() - series.min()
-        volatility = "⚠️ High fluctuations" if fluctuation > (0.1 * abs(start)) else "➡️ Relatively stable"
-        
-        # Format summary text
-        summary.append(f"📈 **{col} Analysis:**\n"
-                       f"- **Start**: {start:.4f}, **End**: {end:.4f}, **Change**: {change:+.4f}, {percent_change:+.2f}%\n"
-                       f"- **Min**: {min_val:.4f}, **Max**: {max_val:.4f}\n"
-                       f"- **Mean**: {mean_val:.4f}, **Median**: {median_val:.4f}, **Std Dev**: {std_val:.4f}\n"
-                       f"- **Avg Change per Period**: {avg_change:+.4f}\n"
-                       f"- **Trend Reversals**: {len(reversals)} times\n"
-                       f"- {volatility}\n")
-
-    return "\n".join(summary)
-
-# 2. Summarize basic trends only
+}
+# Summarize basic trends only
 def summarize_basic_trends(df_filtered, start_date, end_date, title):
     """
     Summarizes key trends in a financial dataset with basic insights.
@@ -84,7 +48,7 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
     if df_filtered.empty:
         return "No data to analyze."
 
-    summary = [f"📊 **{title} Summary ({start_date.strftime('%d/%m/%Y')} - {end_date.strftime('%d/%m/%Y')}):**\n"]
+    summary = [f"📊 **{title} Summary:**\n"]
 
     for col in df_filtered.columns:
         series = df_filtered[col].dropna()
@@ -105,6 +69,9 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
         # Detect significant fluctuations (if max-min difference is large)
         fluctuation = series.max() - series.min()
         volatility = "⚠️ High fluctuations" if fluctuation > (0.1 * abs(start)) else "🔹 Relatively stable"
+
+        if col in ticker_mapping:
+            col = ticker_mapping[col]
 
         # Format the summary
         summary.append(f"📈 **{col}**: {trend} ({start:.2f} → {end:.2f}, Change: {change:+.2f}, {percent_change:+.2f}%). {volatility}.\n")
