@@ -70,9 +70,6 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
         return "No data to analyze."
 
     summary = [f"📊 **{title} Summary:**\n"]
-    shorter_summary = [f"📊 **{title} Overview:**\n"]
-
-    grouped_trends = {}
 
     # Generate full summary
     for col in df_filtered.columns:
@@ -97,22 +94,10 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
 
         if col in ticker_mapping:
             col = ticker_mapping[col]
+        else:
+            col = ""
 
         # Format the summary
-        summary.append(f"📈 **{col}**: {trend} ({start:.2f} → {end:.2f}, Change: {change:+.2f}, {percent_change:+.2f}%). {volatility}.\n")
-
-        # Group trends for shorter summary
-        key = (trend, volatility)
-        if key not in grouped_trends:
-            grouped_trends[key] = []
-        
-        grouped_trends[key].append(col)
-
-    # Generate shorter summary
-    for (trend, volatility), cols in grouped_trends.items():
-        if len(cols) == 1:
-            shorter_summary.append(f"📈 **{cols[0]}**: {trend}. {volatility}.\n")
-        else:
-            shorter_summary.append(f"📈 **{', '.join(cols)}**: {trend}. All showed similar movements. {volatility}.\n")
+        summary.append(f"{col} {trend} ({start:.2f} → {end:.2f}, Change: {change:+.2f}, {percent_change:+.2f}%). {volatility}.\n")
     
-    return "\n".join(summary), "\n".join(shorter_summary)
+    return "\n".join(summary)

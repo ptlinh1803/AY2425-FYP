@@ -380,6 +380,15 @@ def format_date_column(df):
         return df
 
     return df_copy
+
+# 2.9. Select yield curve for 1 day
+@st.cache_data
+def select_yield_for_one_day(df, selected_date, country):
+    df_filtered = df[df.index == pd.to_datetime(selected_date)]
+    selected_columns = [col for col in yield_columns[country] if col in df_filtered.columns]
+    df_filtered = df_filtered[selected_columns]
+
+    return df_filtered
     
 
 # 3. VISUALIZATION-------------------------------------
@@ -390,15 +399,13 @@ def plot_yield_curve(df, selected_date, country):
         return
 
     # Filter data for the selected date
-    df_filtered = df[df.index == pd.to_datetime(selected_date)]
+    df_filtered = select_yield_for_one_day(df, selected_date, country)
 
     if df_filtered.empty:
         st.warning(f"No data available for {selected_date.strftime('%d/%m/%Y')}")
         return
 
     # Keep only the selected yield columns
-    selected_columns = [col for col in yield_columns[country] if col in df_filtered.columns]
-    df_filtered = df_filtered[selected_columns]
     df_filtered_copy = format_date_column(df_filtered)
     st.dataframe(df_filtered_copy)
 
@@ -406,7 +413,7 @@ def plot_yield_curve(df, selected_date, country):
     maturities = []
     yields = []
 
-    for col in selected_columns:
+    for col in yield_columns[country]:
         if not pd.isna(df_filtered.iloc[0][col]):  # Check for non-null values
             maturities.append(get_maturity_name(col))  # Column name represents maturity
             yields.append(df_filtered.iloc[0][col])  # Yield value

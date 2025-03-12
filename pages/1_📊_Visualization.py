@@ -179,7 +179,7 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     # Summary of key trends
     required_columns = viz.yield_columns[st.session_state.country]
     df_filtered = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns)
-    summary_yield_curve_key_trends, _ = openai_util.summarize_basic_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title)
+    summary_yield_curve_key_trends = openai_util.summarize_basic_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title)
     summary_for_prompt.append(summary_yield_curve_key_trends)
     with st.expander("📑 Key Trend Insights"):
         st.markdown(summary_yield_curve_key_trends)
@@ -208,8 +208,8 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             viz.plot_multiple_lines(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, required_columns_china_loan, "China Loan Prime Rate", is_filtered=True)
 
             if df_china_loan_filtered is not None and not df_china_loan_filtered.empty:
-                summary_china_loan, short_summary_china_loan = openai_util.summarize_basic_trends(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, "China Loan Prime Rate")
-                summary_for_prompt.append(short_summary_china_loan)
+                summary_china_loan = openai_util.summarize_basic_trends(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, "China Loan Prime Rate")
+                summary_for_prompt.append(summary_china_loan)
                 with st.expander("📑 Key Trend Insights"):
                     st.markdown(summary_china_loan)
         
@@ -223,8 +223,8 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             viz.plot_multiple_lines(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
 
             if df_temp_filtered is not None and not df_temp_filtered.empty:
-                summary_temp, short_summary = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
-                summary_for_prompt.append(short_summary)
+                summary_temp = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
+                summary_for_prompt.append(summary_temp)
                 with st.expander("📑 Key Trend Insights"):
                     st.markdown(summary_temp)
 
@@ -240,8 +240,8 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             viz.plot_multiple_lines(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
 
             if df_temp_filtered is not None and not df_temp_filtered.empty:
-                summary_temp, short_summary = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
-                summary_for_prompt.append(short_summary)
+                summary_temp = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
+                summary_for_prompt.append(summary_temp)
                 with st.expander("📑 Key Trend Insights"):
                     st.markdown(summary_temp)
 
@@ -257,8 +257,8 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             viz.plot_or_show_table(df_temp_filtered, col_name, st.session_state.start_date, st.session_state.end_date, frequency, is_filtered=True)
 
             if df_temp_filtered is not None and not df_temp_filtered.empty:
-                summary_temp, short_summary = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
-                summary_for_prompt.append(short_summary)
+                summary_temp = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
+                summary_for_prompt.append(summary_temp)
                 with st.expander("📑 Key Trend Insights"):
                     st.markdown(summary_temp)
 
