@@ -103,8 +103,53 @@ df = viz.load_data(file_path)
 if df is not None:
     viz.plot_yield_curve(df, st.session_state.selected_date, st.session_state.country)
 
+with st.expander("📚 Understanding the Yield Curve: A Quick Guide"):
+    st.markdown("""
+    ### 📈 What is a Yield Curve?
+    The **yield curve** is a graphical representation of **bond yields** across different maturities.  
+    It helps investors and economists understand **interest rate expectations**, **inflation outlook**, and **economic growth trends**.
+
+    ### 🔎 How to Interpret the Yield Curve?
+    The shape of the yield curve provides **insights into market expectations**:
+
+    - **🔼 Upward-Sloping (Normal Curve)**
+      - Short-term yields **lower** than long-term yields.
+      - Indicates **economic growth** and **inflation expectations**.
+      - Investors expect **higher interest rates** in the future.
+      - Common during economic **expansion**.
+
+    - **🔽 Downward-Sloping (Inverted Curve)**
+      - Short-term yields **higher** than long-term yields.
+      - Often a **recession indicator**.
+      - Suggests **interest rate cuts** or economic slowdown.
+      - Common before an economic **downturn**.
+
+    - **〰️ Flat Curve**
+      - Short-term and long-term yields **almost equal**.
+      - Signals **economic uncertainty**.
+      - Often occurs during **transitions** (before recession or recovery).
+
+    - **🔄 Humped Curve**
+      - Middle-term yields **higher** than both short-term and long-term.
+      - Suggests **short-term uncertainty** but **long-term stability**.
+      - Can indicate **monetary policy shifts**.
+                
+    - **🔄 Reverse Humped Curve**  
+      - Middle-term yields **lower** than both short-term and long-term.  
+      - Suggests **tight short-term monetary policy** but **long-term inflation concerns**.  
+      - Often occurs when **central banks raise short-term rates aggressively**, while markets **expect future rate cuts** due to economic slowdown.  
+      - Can signal **policy transitions, economic uncertainty, or concerns about long-term debt sustainability**.
+
+    ### 💡 Why Does the Yield Curve Matter?
+    - **📊 Investors** use it to predict **stock market trends**.
+    - **🏦 Central banks** monitor it to guide **interest rate decisions**.
+    - **📉 Businesses** use it for **borrowing cost forecasts**.
+    """)
+
+
 # 2. Visualization for a period:
 st.header("Visualization for a Selected Period")
+summary_for_prompt = []
 
 if "invalid_date" not in st.session_state or st.session_state.invalid_date == False:
     tab1, tab2, tab3, tab4 = st.tabs(["📈 Yield Curve Trends", "🌍 3D Yield Curve", "🔥 Yield Curve Heatmap", "🎞️ Yield Curve Animation"])
@@ -134,14 +179,16 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     # Summary of key trends
     required_columns = viz.yield_columns[st.session_state.country]
     df_filtered = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns)
+    summary_yield_curve_key_trends = openai_util.extract_key_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title)
+    summary_for_prompt.append(summary_yield_curve_key_trends)
     with st.expander("📑 Key Trend Insights"):
-        st.markdown(openai_util.extract_key_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title))
+        st.markdown(summary_yield_curve_key_trends)
 
     st.divider()
     # Plot additional graphs
     if selected_graphs:
         st.subheader("Additional Insights:")
-        
+
     for sg in selected_graphs:
         # Individual maturity
         if sg in viz.yield_mapping:
@@ -159,6 +206,12 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             df_china_loan_filtered = viz.filter_data_by_frequency(df_china_loan, st.session_state.start_date, st.session_state.end_date, "monthly")
             required_columns_china_loan = ["CHLRLPR1_Last Price", "CHLRLPR5_Last Price"]
             viz.plot_multiple_lines(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, required_columns_china_loan, "China Loan Prime Rate", is_filtered=True)
+
+            if df_china_loan_filtered is not None and not df_china_loan_filtered.empty:
+                summary_china_loan = openai_util.summarize_basic_trends(df_china_loan_filtered, st.session_state.start_date, st.session_state.end_date, "China Loan Prime Rate")
+                summary_for_prompt.append(summary_china_loan)
+                with st.expander("📑 Key Trend Insights"):
+                    st.markdown(summary_china_loan)
         
         # Multiple lines without MA
         elif sg in viz.multiple_lines_mapping:
@@ -168,6 +221,12 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             required_columns = viz.multiple_lines_mapping[sg]["required_columns"]
             df_temp_filtered = viz.filter_dataframe(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns)
             viz.plot_multiple_lines(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
+
+            if df_temp_filtered is not None and not df_temp_filtered.empty:
+                summary_temp = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
+                summary_for_prompt.append(summary_temp)
+                with st.expander("📑 Key Trend Insights"):
+                    st.markdown(summary_temp)
 
         # Multiple lines with MA
         elif sg in viz.multiple_lines_mapping_with_ma:
@@ -180,6 +239,12 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             df_temp_filtered = viz.filter_dataframe(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns)
             viz.plot_multiple_lines(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
 
+            if df_temp_filtered is not None and not df_temp_filtered.empty:
+                summary_temp = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
+                summary_for_prompt.append(summary_temp)
+                with st.expander("📑 Key Trend Insights"):
+                    st.markdown(summary_temp)
+
         # Others
         elif sg in viz.others_mapping:
             title = viz.others_mapping[sg]["title"]
@@ -191,6 +256,15 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             df_temp_filtered = viz.filter_data_by_frequency(df_temp, st.session_state.start_date, st.session_state.end_date, frequency)
             viz.plot_or_show_table(df_temp_filtered, col_name, st.session_state.start_date, st.session_state.end_date, frequency, is_filtered=True)
 
+            if df_temp_filtered is not None and not df_temp_filtered.empty:
+                summary_temp = openai_util.summarize_basic_trends(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, title)
+                summary_for_prompt.append(summary_temp)
+                with st.expander("📑 Key Trend Insights"):
+                    st.markdown(summary_temp)
+
         else:
             st.warning(f"⚠️ {sg} is not available for {st.session_state.country}.")
+
+with st.expander("SHOW FULL PROMPT"):
+    st.markdown("\n".join(summary_for_prompt))
 
