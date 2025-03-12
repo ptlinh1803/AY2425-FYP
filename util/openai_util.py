@@ -16,8 +16,29 @@ ticker_mapping = {
     "GACGB5_Close": "5Y Yield",
     "GACGB10_Close": "10Y Yield",
     "GACGB30_Close": "30Y Yield",
-
+    "TI0001M_Ask Price": "TIBOR 1M",
+    "TI0003M_Ask Price": "TIBOR 3M",
+    "TI0006M_Ask Price": "TIBOR 6M",
+    "TI0012M_Ask Price": "TIBOR 12M",
+    "JYSOC_Close": "JPY OIS 1Y",
+    "JYSO2_Close": "JPY OIS 2Y",
+    "JYSO5_Close": "JPY OIS 5Y",
+    "JYSO10_Close": "JPY OIS 10Y",
+    "JYSO30_Close": "JPY OIS 30Y",
+    "CCSWOC_Close": "CNY IRS 1Y (7D Repo)",
+    "CCSWO2_Close": "CNY IRS 2Y (7D Repo)",
+    "CCSWO5_Close": "CNY IRS 5Y (7D Repo)",
+    "CCSWO10_Close": "CNY IRS 10Y (7D Repo)",
+    "CHLRLPR1_Last Price": "LPR 1Y",
+    "CHLRLPR5_Last Price": "LPR 5Y",
+    "SHIF1Y_Close": "SHIBOR 1Y",
+    "SHIF3M_Close": "SHIBOR 3M",
+    "ADSWAP2_Close": "AUD IRS 2Y (6M Benchmark)",
+    "ADSWAP5_Close": "AUD IRS 5Y (6M Benchmark)",
+    "ADSWAP10_Close": "AUD IRS 10Y (6M Benchmark)",
+    "ADSWAP30_Close": "AUD IRS 30Y (6M Benchmark)"
 }
+
 # Summarize basic trends only
 def summarize_basic_trends(df_filtered, start_date, end_date, title):
     """
@@ -49,7 +70,11 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
         return "No data to analyze."
 
     summary = [f"📊 **{title} Summary:**\n"]
+    shorter_summary = [f"📊 **{title} Overview:**\n"]
 
+    grouped_trends = {}
+
+    # Generate full summary
     for col in df_filtered.columns:
         series = df_filtered[col].dropna()
 
@@ -76,4 +101,18 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
         # Format the summary
         summary.append(f"📈 **{col}**: {trend} ({start:.2f} → {end:.2f}, Change: {change:+.2f}, {percent_change:+.2f}%). {volatility}.\n")
 
-    return "\n".join(summary)
+        # Group trends for shorter summary
+        key = (trend, volatility)
+        if key not in grouped_trends:
+            grouped_trends[key] = []
+        
+        grouped_trends[key].append(col)
+
+    # Generate shorter summary
+    for (trend, volatility), cols in grouped_trends.items():
+        if len(cols) == 1:
+            shorter_summary.append(f"📈 **{cols[0]}**: {trend}. {volatility}.\n")
+        else:
+            shorter_summary.append(f"📈 **{', '.join(cols)}**: {trend}. All showed similar movements. {volatility}.\n")
+    
+    return "\n".join(summary), "\n".join(shorter_summary)
