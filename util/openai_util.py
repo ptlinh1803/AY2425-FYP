@@ -48,24 +48,6 @@ ticker_mapping = {
 
 # 1. Summarize basic trends
 def summarize_basic_trends(df_filtered, start_date, end_date, title):
-    """
-    Summarizes key trends in a financial dataset with basic insights.
-
-    Extracts:
-    - First and last available values
-    - Overall trend direction (up/down/stable)
-    - Change in value (absolute & percentage)
-    - Any significant fluctuations
-
-    Args:
-        df_filtered (pd.DataFrame): Filtered dataframe with Date as index.
-        start_date (datetime): Start of the analysis period.
-        end_date (datetime): End of the analysis period.
-        title (str): Name of the dataset.
-
-    Returns:
-        str: Formatted basic summary of financial trends.
-    """
     # Ensure Date is the index and filter for the given period
     df_filtered = df_filtered.loc[start_date:end_date]
 
@@ -84,6 +66,11 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
 
         if series.empty:
             summary.append(f"📈 **{col}**: No available data.")
+            continue
+
+        if len(series) == 1:
+            date_str = series.index[0].strftime('%d/%m/%Y')
+            summary.append(f"📈 {ticker_mapping.get(col, '')} on {date_str}: {series.iloc[0]:.2f}")
             continue
 
         # Get first and last values
@@ -133,6 +120,7 @@ def generate_prompt_for_a_single_day(df, selected_date, country):
 
     return "\n".join(prompt)
 
+# 3. Generate prompt for yield curve of a period
 def generate_yield_curve_trend_prompt(country, start_date, end_date, trend_summary):
     prompt = f"""
     Yield Curve Trend Analysis for {country} ({start_date} - {end_date})**
