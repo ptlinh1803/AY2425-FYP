@@ -100,7 +100,7 @@ multiple_lines_mapping_with_ma = {
         "file_path": "data/others/MUTKCALM Bank of Japan Final Result - Unsecured Overnight Call Rate TONAR.xlsx",
     },
     'USD/JPY Exchange Rate': {
-        "title": "'USD/JPY Exchange Rate",
+        "title": "USD/JPY Exchange Rate",
         "file_path": "data/others/USDJPY Exchange Rate USD-JPY.xlsx",
     },
     'Nikkei 225 Index': {
