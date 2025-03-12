@@ -31,6 +31,8 @@ if "ai_summary_single_response" not in st.session_state:
     st.session_state.ai_summary_single_response = None
 if "ai_summary_trend_response" not in st.session_state:
     st.session_state.ai_summary_trend_response = None
+if "ai_summary_multi_response" not in st.session_state:
+    st.session_state.ai_summary_multi_response = None
 
 # Callback function to update session state
 def update_country():
@@ -96,6 +98,14 @@ selected_graphs = st.sidebar.multiselect(
     key="graph_picker"
 )
 
+# If selected_graphs change, clear the previous response
+if "prev_selected_graphs" not in st.session_state:
+    st.session_state.prev_selected_graphs = selected_graphs
+
+if selected_graphs != st.session_state.prev_selected_graphs:
+    st.session_state.ai_summary_multi_response = None  # Clear AI response when graphs change
+    st.session_state.prev_selected_graphs = selected_graphs  # Update stored graphs
+
 # Main page -------------------------------------
 st.title(st.session_state.country)
 
@@ -113,11 +123,12 @@ if df is not None:
 if df is not None:
     df_filtered = viz.select_yield_for_one_day(df, st.session_state.selected_date, st.session_state.country)
     if df_filtered is not None and not df_filtered.empty:
-        prompt = openai_util.generate_prompt_for_a_single_day(df_filtered, st.session_state.selected_date, st.session_state.country)
-
+        
         if st.button("💡 AI Summary", key="ai_summary_single"):
             # Call OpenAI API and get response
-            st.session_state.ai_summary_single_response = openai_util.get_openai_response(prompt)
+            prompt = openai_util.generate_prompt_for_a_single_day(df_filtered, st.session_state.selected_date, st.session_state.country)
+            with st.status("🔄 Analyzing the Yield Curve...", expanded=False):
+                st.session_state.ai_summary_single_response = openai_util.get_openai_response(prompt)
 
 if st.session_state.ai_summary_single_response:
     # Display response in an expander
@@ -163,9 +174,10 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
         st.markdown(summary_yield_curve_key_trends)
 
     # Get AI Summary for the whole yield curve during this period
-    prompt_trend = openai_util.generate_yield_curve_trend_prompt(st.session_state.country, st.session_state.start_date, st.session_state.end_date, summary_yield_curve_key_trends)
     if st.button("💡 AI Summary", key="ai_summary_trend"):
-        st.session_state.ai_summary_trend_response = openai_util.get_openai_response(prompt_trend)
+        prompt_trend = openai_util.generate_yield_curve_trend_prompt(st.session_state.country, st.session_state.start_date, st.session_state.end_date, summary_yield_curve_key_trends)
+        with st.status("🔄 Analyzing the Yield Curve over a period...", expanded=False):
+            st.session_state.ai_summary_trend_response = openai_util.get_openai_response(prompt_trend)
 
     if st.session_state.ai_summary_trend_response:
         with st.expander("📊 AI Analysis (Trend)"):
@@ -251,4 +263,21 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
 
         else:
             st.warning(f"⚠️ {sg} is not available for {st.session_state.country}.")
+
+    # Generate the AI Summary button only if additional insights exist
+    if len(summary_for_prompt) > 1:
+        if st.button("💡 AI Summary (Multi-Factor Analysis)", key="ai_summary_multi"):
+            with st.status("🔄 Generating AI insights for Multi-Factor Analysis...", expanded=False):
+                prompt = openai_util.generate_multi_data_prompt(
+                    st.session_state.country,
+                    st.session_state.start_date.strftime('%d/%m/%Y'),
+                    st.session_state.end_date.strftime('%d/%m/%Y'),
+                    summary_for_prompt
+                )
+                st.session_state.ai_summary_multi_response = openai_util.get_openai_response(prompt)
+
+    # Display AI response if available
+    if st.session_state.ai_summary_multi_response:
+        with st.expander("📊 AI Analysis (Multi-Factor Impact)"):
+            st.markdown(st.session_state.ai_summary_multi_response)
 

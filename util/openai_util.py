@@ -141,9 +141,40 @@ def generate_yield_curve_trend_prompt(country, start_date, end_date, trend_summa
 
     return prompt
 
+# 4. Generated prompt for additional data
+def generate_multi_data_prompt(country, start_date, end_date, summary_for_prompt):
+    # Yield Curve Summary (First Element)
+    yield_curve_summary = summary_for_prompt[0]
+
+    # Additional Insights (If Any)
+    additional_summaries = summary_for_prompt[1:]
+
+    prompt = f"""
+    # Macroeconomic & Yield Curve Analysis for {country} ({start_date} - {end_date})
+
+    ## Yield Curve Key Trends:
+    {yield_curve_summary}
+
+    """
+
+    if additional_summaries:
+        prompt += "## **Additional Insights & Impact Analysis:**\n"
+        for summary in additional_summaries:
+            prompt += f"""
+            🔍 **Data Summary:**
+            {summary}
+
+            - How has this indicator evolved over the period?
+            - What does this trend suggest about {country}'s economy?
+            - Could this data have influenced the yield curve? If so, how?
+            """
+
+    prompt += "\n**Please provide a concise, structured response.**"
+    
+    return prompt
 
 
-# Given any prompt, generate OpenAI's response
+# 5. Given any prompt, generate OpenAI's response
 def get_openai_response(prompt):
     try:
         client = openai.OpenAI(api_key=openai_api_key)
