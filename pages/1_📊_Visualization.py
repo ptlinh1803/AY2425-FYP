@@ -27,6 +27,10 @@ if "selected_date" not in st.session_state:
     st.session_state.selected_date = default_end
 if "invalid_date" not in st.session_state:
     st.session_state.invalid_date = False
+if "ai_summary_single_response" not in st.session_state:
+    st.session_state.ai_summary_single_response = None
+if "ai_summary_trend_response" not in st.session_state:
+    st.session_state.ai_summary_trend_response = None
 
 # Callback function to update session state
 def update_country():
@@ -34,12 +38,15 @@ def update_country():
 
 def update_selected_date():
     st.session_state.selected_date = datetime.combine(st.session_state["selected_date_picker"], datetime.min.time())
+    st.session_state.ai_summary_single_response = None # clear AI summary for the previously selected date
 
 def update_start_date():
     st.session_state.start_date = datetime.combine(st.session_state["start_date_picker"], datetime.min.time())
+    st.session_state.ai_summary_trend_response = None
 
 def update_end_date():
     st.session_state.end_date = datetime.combine(st.session_state["end_date_picker"], datetime.min.time())
+    st.session_state.ai_summary_trend_response = None
 
 # Dropdown to select country
 st.sidebar.selectbox(
@@ -108,13 +115,14 @@ if df is not None:
     if df_filtered is not None and not df_filtered.empty:
         prompt = openai_util.generate_prompt_for_a_single_day(df_filtered, st.session_state.selected_date, st.session_state.country)
 
-        if st.button("💡 AI Summary"):
+        if st.button("💡 AI Summary", key="ai_summary_single"):
             # Call OpenAI API and get response
-            response = openai_util.get_openai_response(prompt)
+            st.session_state.ai_summary_single_response = openai_util.get_openai_response(prompt)
 
-            # Display response in an expander
-            with st.expander("📊 AI-Generated Analysis"):
-                st.markdown(response)
+if st.session_state.ai_summary_single_response:
+    # Display response in an expander
+    with st.expander("📊 AI-Generated Analysis"):
+        st.markdown(st.session_state.ai_summary_single_response)
         
 
 # 2. Visualization for a period:
@@ -150,9 +158,17 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
     required_columns = viz.yield_columns[st.session_state.country]
     df_filtered = viz.filter_dataframe(df, st.session_state.start_date, st.session_state.end_date, required_columns)
     summary_yield_curve_key_trends = openai_util.summarize_basic_trends(df_filtered, st.session_state.start_date, st.session_state.end_date, title)
-    summary_for_prompt.append(summary_yield_curve_key_trends)
     with st.expander("📑 Key Trend Insights"):
         st.markdown(summary_yield_curve_key_trends)
+
+    # Get AI Summary for the whole yield curve during this period
+    prompt_trend = openai_util.generate_yield_curve_trend_prompt(st.session_state.country, st.session_state.start_date, st.session_state.end_date, summary_yield_curve_key_trends)
+    if st.button("💡 AI Summary", key="ai_summary_trend"):
+        st.session_state.ai_summary_trend_response = openai_util.get_openai_response(prompt_trend)
+
+    if st.session_state.ai_summary_trend_response:
+        with st.expander("📊 AI Analysis (Trend)"):
+            st.markdown(st.session_state.ai_summary_trend_response)
 
     st.divider()
     # Plot additional graphs

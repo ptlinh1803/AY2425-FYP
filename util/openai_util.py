@@ -133,6 +133,29 @@ def generate_prompt_for_a_single_day(df, selected_date, country):
 
     return "\n".join(prompt)
 
+def generate_yield_curve_trend_prompt(country, start_date, end_date, trend_summary):
+    prompt = f"""
+    Yield Curve Trend Analysis for {country} ({start_date} - {end_date})**
+
+    {trend_summary}
+
+    Analysis Questions (answer shortly in bullet points):
+    1. How does the yield curve evolve over this period?
+    - Are there any significant/abnormal trends?  
+    - Differences in movement between short-term, medium-term, and long-term maturities? 
+    - What does this movement suggest about monetary policy shifts?  
+
+    2. What does this yield curve trend suggest about {country}'s economy?  
+    - How do investor expectations seem to shift over time?  
+
+    3. What key global or domestic events during this period could have impacted the yield curve, if you know?   
+    """
+
+    return prompt
+
+
+
+# Given any prompt, generate OpenAI's response
 def get_openai_response(prompt):
     try:
         client = openai.OpenAI(api_key=openai_api_key)
@@ -142,8 +165,9 @@ def get_openai_response(prompt):
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a financial analyst specializing in bond markets, monetary policy, "
-                               "and macroeconomics. Provide deep insights and explain yield trends in detail."
+                    "content": "You are a financial analyst specializing in bond markets, monetary policy, and macroeconomics. "
+                        "Summarize your analysis clearly and concisely within the given token limit. "
+                        "Prioritize key insights, avoid excessive details, and structure responses effectively."
                 },
                 {"role": "user", "content": prompt}
             ],
