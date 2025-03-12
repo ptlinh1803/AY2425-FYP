@@ -103,49 +103,19 @@ df = viz.load_data(file_path)
 if df is not None:
     viz.plot_yield_curve(df, st.session_state.selected_date, st.session_state.country)
 
-with st.expander("📚 Understanding the Yield Curve: A Quick Guide"):
-    st.markdown("""
-    ### 📈 What is a Yield Curve?
-    The **yield curve** is a graphical representation of **bond yields** across different maturities.  
-    It helps investors and economists understand **interest rate expectations**, **inflation outlook**, and **economic growth trends**.
+if df is not None:
+    df_filtered = viz.select_yield_for_one_day(df, st.session_state.selected_date, st.session_state.country)
+    if df_filtered is not None and not df_filtered.empty:
+        prompt = openai_util.generate_prompt_for_a_single_day(df_filtered, st.session_state.selected_date, st.session_state.country)
 
-    ### 🔎 How to Interpret the Yield Curve?
-    The shape of the yield curve provides **insights into market expectations**:
+        if st.button("💡 AI Summary"):
+            # Call OpenAI API and get response
+            response = openai_util.get_openai_response(prompt)
 
-    - **🔼 Upward-Sloping (Normal Curve)**
-      - Short-term yields **lower** than long-term yields.
-      - Indicates **economic growth** and **inflation expectations**.
-      - Investors expect **higher interest rates** in the future.
-      - Common during economic **expansion**.
-
-    - **🔽 Downward-Sloping (Inverted Curve)**
-      - Short-term yields **higher** than long-term yields.
-      - Often a **recession indicator**.
-      - Suggests **interest rate cuts** or economic slowdown.
-      - Common before an economic **downturn**.
-
-    - **〰️ Flat Curve**
-      - Short-term and long-term yields **almost equal**.
-      - Signals **economic uncertainty**.
-      - Often occurs during **transitions** (before recession or recovery).
-
-    - **🔄 Humped Curve**
-      - Middle-term yields **higher** than both short-term and long-term.
-      - Suggests **short-term uncertainty** but **long-term stability**.
-      - Can indicate **monetary policy shifts**.
-                
-    - **🔄 Reverse Humped Curve**  
-      - Middle-term yields **lower** than both short-term and long-term.  
-      - Suggests **tight short-term monetary policy** but **long-term inflation concerns**.  
-      - Often occurs when **central banks raise short-term rates aggressively**, while markets **expect future rate cuts** due to economic slowdown.  
-      - Can signal **policy transitions, economic uncertainty, or concerns about long-term debt sustainability**.
-
-    ### 💡 Why Does the Yield Curve Matter?
-    - **📊 Investors** use it to predict **stock market trends**.
-    - **🏦 Central banks** monitor it to guide **interest rate decisions**.
-    - **📉 Businesses** use it for **borrowing cost forecasts**.
-    """)
-
+            # Display response in an expander
+            with st.expander("📊 AI-Generated Analysis"):
+                st.markdown(response)
+        
 
 # 2. Visualization for a period:
 st.header("Visualization for a Selected Period")

@@ -1,4 +1,11 @@
 import pandas as pd
+import openai
+from dotenv import load_dotenv
+import os
+# Load API key
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
 # Mapping of tickers to human-readable maturities
 ticker_mapping = {
     "GJTB3MO_Close": "3M Yield",
@@ -39,7 +46,7 @@ ticker_mapping = {
     "ADSWAP30_Close": "AUD IRS 30Y (6M Benchmark)"
 }
 
-# Summarize basic trends only
+# 1. Summarize basic trends
 def summarize_basic_trends(df_filtered, start_date, end_date, title):
     """
     Summarizes key trends in a financial dataset with basic insights.
@@ -101,3 +108,51 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
         summary.append(f"{col} {trend} ({start:.2f} → {end:.2f}, Change: {change:+.2f}, {percent_change:+.2f}%). {volatility}.\n")
     
     return "\n".join(summary)
+
+# 2. Generate prompt for yield curve of the selected prompt
+def generate_prompt_for_a_single_day(df, selected_date, country):
+    if df.empty:
+        return ""
+    
+    prompt = []
+
+    title = f"Yield Curve Summary for {country} on {selected_date.strftime('%d/%m/%Y')}\n"
+    prompt.append(title)
+
+    for col in df.columns:
+        prompt.append(f"- {ticker_mapping[col]}: {df[col].values[0]:.4f}%")
+
+    # Add analysis questions
+    prompt.append("""
+        Analysis Questions (answer shortly):
+        1. What is the shape of this yield curve?  
+        - Is it upward-sloping (normal), downward-sloping (inverted), or humped?  
+        2. What does this shape indicate about the economy? 
+        - Does it suggest economic expansion, slowdown, or uncertainty?
+        """)
+
+    return "\n".join(prompt)
+
+def get_openai_response(prompt):
+    try:
+        client = openai.OpenAI(api_key=openai_api_key)
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a financial analyst specializing in bond markets, monetary policy, "
+                               "and macroeconomics. Provide deep insights and explain yield trends in detail."
+                },
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500,
+            temperature=0.2  # More factual responses
+        )
+
+        # ✅ Extract and return the response text
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        return f"⚠️ Error: {str(e)}"
