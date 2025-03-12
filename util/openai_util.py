@@ -16,7 +16,7 @@ def extract_key_trends(df_filtered, start_date, end_date, title):
     df_filtered = df_filtered.loc[:, ~df_filtered.columns.str.contains("SMAVG")]
 
     summary = []
-    summary.append(f"📊 **{title} Analysis:**\n")
+    summary.append(f"📊 **Analysis of {title} from {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}:**\n")
     
     for col in df_filtered.columns:
         series = df_filtered[col]

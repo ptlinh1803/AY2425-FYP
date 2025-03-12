@@ -163,7 +163,8 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             st.markdown(f"##### **{title}**")
             df_temp = viz.load_data(viz.multiple_lines_mapping[sg]["file_path"])
             required_columns = viz.multiple_lines_mapping[sg]["required_columns"]
-            viz.plot_multiple_lines(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns, title)
+            df_temp_filtered = viz.filter_dataframe(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns)
+            viz.plot_multiple_lines(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
 
         # Multiple lines with MA
         elif sg in viz.multiple_lines_mapping_with_ma:
@@ -173,7 +174,8 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             df_temp.columns = [col.replace("on Close", "").strip() for col in df_temp.columns]
             ma_columns = viz.find_moving_average_columns(df_temp)
             required_columns = ["Close"] + list(ma_columns.values())
-            viz.plot_multiple_lines(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns, title)
+            df_temp_filtered = viz.filter_dataframe(df_temp, st.session_state.start_date, st.session_state.end_date, required_columns)
+            viz.plot_multiple_lines(df_temp_filtered, st.session_state.start_date, st.session_state.end_date, required_columns, title, is_filtered=True)
 
         # Others
         elif sg in viz.others_mapping:
@@ -182,8 +184,9 @@ if "invalid_date" not in st.session_state or st.session_state.invalid_date == Fa
             col_name = viz.others_mapping[sg][st.session_state.country]["col"]
             frequency = viz.others_mapping[sg][st.session_state.country]["frequency"]
             st.markdown(f"##### **{st.session_state.country} {title}**")
-            df_cpi = viz.load_data(file_path)
-            viz.plot_or_show_table(df_cpi, col_name, st.session_state.start_date, st.session_state.end_date, frequency)
+            df_temp = viz.load_data(file_path)
+            df_temp_filtered = viz.filter_data_by_frequency(df_temp, st.session_state.start_date, st.session_state.end_date, frequency)
+            viz.plot_or_show_table(df_temp_filtered, col_name, st.session_state.start_date, st.session_state.end_date, frequency, is_filtered=True)
 
         else:
             st.warning(f"⚠️ {sg} is not available for {st.session_state.country}.")

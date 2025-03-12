@@ -693,8 +693,11 @@ def plot_multiple_lines(df, start_date, end_date, required_columns, title, is_fi
 
 
 # 3.6. Plot or show tables
-def plot_or_show_table(df, column_name, start_date, end_date, frequency):
-    df_filtered = filter_data_by_frequency(df, start_date, end_date, frequency)
+def plot_or_show_table(df, column_name, start_date, end_date, frequency, is_filtered=False):
+    if not is_filtered:
+        df_filtered = filter_data_by_frequency(df, start_date, end_date, frequency)
+    else:
+        df_filtered = df # already filtered
     
     if df_filtered is None or df_filtered.empty:
         st.warning("No data available for the selected period.")
