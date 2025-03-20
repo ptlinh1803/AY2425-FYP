@@ -1,0 +1,27 @@
+{
+    "tables": {
+        "All Yields Data (New)": {
+            "columns": {
+                "Date": {
+                    "sdtype": "datetime"
+                },
+                "Yield": {
+                    "sdtype": "numerical"
+                },
+                "Quarter_Year": {
+                    "sdtype": "categorical"
+                },
+                "Maturity": {
+                    "sdtype": "categorical"
+                },
+                "Symbol": {
+                    "sdtype": "id"
+                }
+            },
+            "sequence_key": "Symbol",
+            "sequence_index": "Date"
+        }
+    },
+    "relationships": [],
+    "METADATA_SPEC_VERSION": "V1"
+}
