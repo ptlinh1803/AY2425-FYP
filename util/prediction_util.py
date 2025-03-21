@@ -52,7 +52,7 @@ def preprocess_upload_input(original_df, selected_maturities, column_mapping, ha
     if len(df) >= input_days:
         df = df.tail(input_days).reset_index(drop=True)  # Keep only the last "input_days" rows
     else:
-        st.warning(f"Only {len(df)} rows available, which is less than the required {input_days}.")
+        st.warning(f"Only {len(df)} rows available, which is less than the required {input_days}. Please prepare enough data for your selected lookback window.")
         return None
 
     return df

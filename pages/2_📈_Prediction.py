@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import util.visualization_util as viz
 import util.prediction_util as pred
 
 # VISUALIZATION PAGE
@@ -20,6 +21,8 @@ if "input_df" not in st.session_state:
     st.session_state.input_df = None
 if "selected_maturities" not in st.session_state:
     st.session_state.selected_maturities = ["3M Yield", "2Y Yield", "5Y Yield", "10Y Yield", "30Y Yield"]
+if "input_metadata" not in st.session_state:
+    st.session_state.input_metadata = None
 
 # Callback function to update session state
 def update_country_pred():
@@ -164,17 +167,45 @@ if st.session_state.input_mode == "Upload your data":
                 if st.session_state.input_df is not None:
                     st.success("Data preprocessed successfully!")
 
+                    st.session_state.input_metadata = {
+                        "country": st.session_state.country_pred,
+                        "maturities": st.session_state.selected_maturities,
+                        "lookback_window": st.session_state.pred_window,
+                        "input_mode": st.session_state.input_mode
+                    }
+
 # 2. GENERATE SYNTHETIC DATA
 else:
     st.success("Generate synthetic data here")
     # save the generated data in st.session_state.input_df
 
 # Display the input DataFrame
-st.header("Visualize the Preprocessed Input")
+st.header("Visualize the Processed Input")
 if st.session_state.input_df is not None:
-    st.write("Process a new file or generate new synthetic data to overwrite.")
-    st.warning("Change this later: display the processed data + graph")
+
+    if st.session_state.input_metadata is not None:
+        # Format for display
+        display_meta = {
+            "Country": st.session_state.input_metadata.get("country", "N/A"),
+            "Maturities": ", ".join(st.session_state.input_metadata.get("maturities", [])) or "N/A",
+            "Lookback Window": st.session_state.input_metadata.get("lookback_window", "N/A"),
+            "Input Mode": st.session_state.input_metadata.get("input_mode", "N/A")
+        }
+        st.markdown("**Metadata of current processed input:**")
+        st.table(pd.DataFrame(display_meta.items(), columns=["Parameter", "Value"]))
+
+    st.info("Process a new file or generate new synthetic data to overwrite.")
+    # st.warning("Change this later: display the processed data + graph")
     # if synthetic data, don't display "Date", or remove "Date" column completely
     st.dataframe(st.session_state.input_df)
+
+    # draw plot
+    required_columns = [col for col in st.session_state.input_df if col != "Date"]
+    viz.plot_multiple_lines(st.session_state.input_df, 
+                            None, 
+                            None, 
+                            required_columns, 
+                            "Visualization of the Processed Input", 
+                            is_filtered=True)
 else:
-    st.info("No input data available yet. Please upload a file or generate synthetic data.")
+    st.warning("No input data available yet. Please upload a file or generate synthetic data.")
