@@ -100,10 +100,6 @@ if st.session_state.input_mode == "Upload your data":
             else:
                 st.error("Unsupported file type.")
                 df = None
-            
-            # Store DataFrame in session state
-            # if df is not None:
-            #     st.session_state.raw_input_df = df 
         except Exception as e:
             st.error(f"Error reading file: {e}")
 
@@ -177,7 +173,25 @@ if st.session_state.input_mode == "Upload your data":
 # 2. GENERATE SYNTHETIC DATA
 else:
     st.success("Generate synthetic data here")
-    # save the generated data in st.session_state.input_df
+
+    # 1. Choose year and quarter to generate synthetic data from
+    # 1.1. if Japan: choose the same year and quarter for all
+    #...
+
+    # 1.2. if China/Australia: choose year and quarter for each maturity
+    # explain why in a st.info
+    #...
+
+    # 2. Choose volatility (add noise)
+    #...
+
+    # 3. Process generated synthetic data (reformat to the standard form)
+    #...
+
+    # 4. save the generated data in st.session_state.input_df and save metadata
+    #...
+
+
 
 # Display the input DataFrame
 st.header("Visualize the Processed Input")
