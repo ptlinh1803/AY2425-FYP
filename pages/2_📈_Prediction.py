@@ -28,24 +28,30 @@ if "input_df" not in st.session_state:
     st.session_state.input_df = None
 if "output_df" not in st.session_state:
     st.session_state.output_df = None
+if "ai_summary_predictions" not in st.session_state:
+    st.session_state.ai_summary_predictions = None
 
 # Callback function to update session state
 def update_country_pred():
     st.session_state.country_pred = st.session_state["country_pred_picker"]
     st.session_state.input_df = None
     st.session_state.output_df = None
+    st.session_state.ai_summary_predictions = None
 def update_pred_window():
     st.session_state.pred_window = st.session_state["pred_window_picker"]
     st.session_state.input_df = None
     st.session_state.output_df = None
+    st.session_state.ai_summary_predictions = None
 def update_input_mode():
     st.session_state.input_mode = st.session_state["input_mode_picker"]
     st.session_state.input_df = None
     st.session_state.output_df = None
+    st.session_state.ai_summary_predictions = None
 def update_selected_maturities():
     st.session_state.selected_maturities = st.session_state["maturity_picker"]
     st.session_state.input_df = None
     st.session_state.output_df = None
+    st.session_state.ai_summary_predictions = None
 
 # Select country
 st.sidebar.selectbox(
@@ -161,6 +167,9 @@ if st.session_state.input_mode == "Upload your data":
 
             # --- Preprocess Data ---
             if st.button("Preprocess Data", key="process_upload_input"):
+                st.session_state.output_df = None # clear previous output if any
+                st.session_state.ai_summary_predictions = None # clear previous summary if any
+
                 st.session_state.input_df = pred.preprocess_upload_input(
                     df,
                     selected_maturities=st.session_state.selected_maturities,
@@ -280,14 +289,14 @@ else:
 
 
     # 2. Choose volatility (add noise)
-    st.markdown("##### Add more randomness to simulate market volatility")
+    st.markdown("##### Additional noise to simulate market volatility")
     volatility = st.slider(
         "Noise standard deviation (higher = more random variation)",
         min_value=0.00,
-        max_value=1.00, # max change = 1% = 100 bps (yield is alr shown in %)
-        value=0.00,
-        step=0.01, # each step = 1 bps = 0.01%
-        format="%.2f",
+        max_value=0.10,        # max change = 0.10% = 10 bps (yield is alr shown in %)
+        value=0.00,            # default: no noise
+        step=0.002,            # step = 0.2 bps
+        format="%.3f",         # show 3 decimal places
         help="Standard deviation of Gaussian noise (in percent units) 0.01 = 1 bps"
     )
     st.caption(f"Current noise level: {volatility / 0.01:.0f} bps")
@@ -295,6 +304,9 @@ else:
 
     # 3. Generate synthetic data
     if st.button("Generate Synthetic Data", key="process_synthetic_input"):
+        st.session_state.output_df = None # clear previous output if any
+        st.session_state.ai_summary_predictions = None # clear previous summary if any
+
         st.session_state.input_df = pred.generate_synthetic_data(
             synthesizer=synthesizer,
             country=st.session_state.country_pred,
@@ -399,5 +411,18 @@ if st.session_state.input_df is not None:
             mime="text/csv",
             icon=":material/download:",
         )
+
+    # Generate the AI Summary button only after output
+    if len(summary_for_prompt) > 1:
+        st.header("Analyze Results with AI")
+        if st.button("💡 AI Interpretation", key="ai_summary_prediction"):
+            with st.status("🔄 Generating AI insights for the predictions...", expanded=False):
+                prompt = openai_util.generate_multi_data_prompt(st.session_state.input_metadata, summary_for_prompt)
+                st.session_state.ai_summary_predictions = openai_util.get_openai_response(prompt)
+
+    # Display AI response if available
+    if st.session_state.ai_summary_predictions:
+        with st.expander("📊 AI Analysis"):
+            st.markdown(st.session_state.ai_summary_predictions)
 
 

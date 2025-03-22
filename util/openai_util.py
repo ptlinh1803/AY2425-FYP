@@ -180,8 +180,55 @@ def generate_multi_data_prompt(country, start_date, end_date, summary_for_prompt
     
     return prompt
 
+# 5. Generate prompt for prediction
+def generate_multi_data_prompt(input_metadata, summary_for_prompt):
+    """
+    Create a descriptive prompt for interpreting input and predicted trends,
+    based on metadata and the input/output summaries.
+    """
+    country = input_metadata.get("country", "Unknown Country")
+    maturities = input_metadata.get("maturities", [])
+    lookback_window = input_metadata.get("lookback_window", "N/A")
+    input_mode = input_metadata.get("input_mode", "Unknown")
+    quarter_year_mapping = input_metadata.get("quarter_year_mapping", {})
+    noise_level = input_metadata.get("noise_level", 0)
+    prompt = ""
 
-# 5. Given any prompt, generate OpenAI's response
+    # Start building the prompt
+    prompt += f"The user selected the following maturities: {', '.join(maturities)} for {country}.\n"
+    prompt += f"The prediction window is: **{lookback_window}**.\n"
+
+    if input_mode == "Generate synthetic data":
+        prompt += f"The data was synthetically generated to resemble historical conditions.\n"
+        if quarter_year_mapping:
+            prompt += "Each maturity was conditioned on a specific time period:\n"
+            for maturity, period in quarter_year_mapping.items():
+                prompt += f"  • {maturity}: {period}\n"
+        if noise_level > 0:
+            prompt += f"A Gaussian noise level of {noise_level * 10000:.0f} basis points (bps) was added to simulate market volatility.\n"
+    else:
+        prompt += "The input data was uploaded directly by the user.\n"
+
+    prompt += "\n---\n"
+    prompt += "Summary of Trends\n"
+    for section in summary_for_prompt:
+        prompt += section + "\n"
+
+    prompt += "\n---\n"
+    prompt += "Interpretation Tasks\n"
+    prompt += (
+        "1. What is the overall trend in the input yields across maturities?\n"
+        "2. What trends can you observe in the predicted yields?\n"
+        "3. Are there any sudden changes, large basis point shifts, or maturity segments that behave unusually?\n"
+        "4. Do the predictions follow or deviate from the input trend?\n"
+        "5. Based on the yield movements, what could be implied about the market outlook or yield curve shape?"
+    )
+
+    return prompt
+
+
+
+# 6. Given any prompt, generate OpenAI's response
 def get_openai_response(prompt, basic=False):
     """
     basic (bool): If True, use GPT-3.5 for a cheaper response; otherwise, use GPT-4o.
