@@ -47,7 +47,7 @@ ticker_mapping = {
 }
 
 # 1. Summarize basic trends
-def summarize_basic_trends(df_filtered, start_date, end_date, title):
+def summarize_basic_trends(df_filtered, start_date, end_date, title, show_bps=False):
     # Ensure Date is the index and filter for the given period
     df_filtered = df_filtered.loc[start_date:end_date]
 
@@ -82,17 +82,17 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title):
         # Determine overall trend direction
         trend = "⬆️ Increased" if end > start else "⬇️ Decreased" if end < start else "➡️ Stable"
 
-        # Detect significant fluctuations (if max-min difference is large)
-        fluctuation = series.max() - series.min()
-        volatility = "⚠️ High fluctuations" if fluctuation > (0.1 * abs(start)) else "🔹 Relatively stable"
-
         if col in ticker_mapping:
             col = ticker_mapping[col]
         else:
             col = ""
 
-        # Format the summary
-        summary.append(f"{col} {trend} ({start:.2f} → {end:.2f}, Change: {change:+.2f}, {percent_change:+.2f}%). {volatility}.\n")
+        if show_bps:
+            bps_change = change / 0.01 # yield is alr shown in %
+            summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {percent_change:+.3f}%, {bps_change:+.0f} bps).\n")
+        else:
+            # Format the summary
+            summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {percent_change:+.3f}%).\n")
     
     return "\n".join(summary)
 

@@ -190,6 +190,7 @@ else:
 
     # 1. Choose year and quarter to generate synthetic data from
     st.markdown("##### Select a reference time period you want the synthetic data to resemble")
+    quarter_year_mapping = dict()
     # 1.1. if Japan: choose the same year and quarter for all
     if st.session_state.country_pred == "Japan":
         st.write("Choose the same year and quarter for all maturities")
@@ -207,19 +208,18 @@ else:
             quarter = st.selectbox("Quarter", quarter_options, key="japan_quarter")
 
         # Build the mapping
-        quarter_year_mapping = dict()
         for maturity in st.session_state.selected_maturities:
             quarter_year_mapping[maturity] = f"{year}{quarter}"
 
     # 1.2. if China/Australia: choose year and quarter for each maturity
     else:
         st.info(
-            f"Different maturities in {st.session_state.country_pred} may have different available time periods. "
+            f"Different maturities in {st.session_state.country_pred} may have different available time periods."
         )
         with st.expander("⚠️ Why does this matter?"):
             st.warning(
                 "📌 We need to select reference time for each maturity individually because of differences in available data. "
-                "If a selected time period wasn't part of the training data for a maturity, the model may not generate realistic results.\n\n"
+                "If a selected time period didn't have enough training data for a maturity, the model may not generate realistic results.\n\n"
                 "📊 In real financial markets, yields for all maturities in a country are observed at the same time. "
                 "If you choose different years and quarters for each maturity, the resulting synthetic yield curve "
                 "may not reflect a real-world yield curve structure.\n\n"
@@ -227,7 +227,6 @@ else:
                 "but for realistic simulations, it's better to use the same time period for all maturities."
             )
         st.markdown("Choose year and quarter for each maturity individually")
-        quarter_year_mapping = dict()
 
         for maturity in st.session_state.selected_maturities:
             # Show the maturity label on its own line
@@ -248,9 +247,19 @@ else:
 
             quarter_year_mapping[maturity] = f"{year}{quarter}"
 
-
     # 2. Choose volatility (add noise)
-    #...
+    st.markdown("##### Add more randomness to simulate market volatility")
+    volatility = st.slider(
+        "Noise standard deviation (higher = more random variation)",
+        min_value=0.00,
+        max_value=1.00, # max change = 1% = 100 bps (yield is alr shown in %)
+        value=0.00,
+        step=0.01, # each step = 1 bps = 0.01%
+        format="%.2f",
+        help="Standard deviation of Gaussian noise (in percent units) 0.01 = 1 bps"
+    )
+    st.caption(f"Current noise level: {volatility / 0.01:.0f} bps")
+
 
     # 3. Process generated synthetic data (reformat to the standard form)
     #...
@@ -260,10 +269,9 @@ else:
 
 
 
-# Display the input DataFrame
-st.header("Visualize the Processed Input")
+# Display the processed input DataFrame
 if st.session_state.input_df is not None:
-
+    st.header("Visualize the Processed Input")
     if st.session_state.input_metadata is not None:
         # Format for display
         display_meta = {
@@ -288,5 +296,5 @@ if st.session_state.input_df is not None:
                             required_columns, 
                             "Visualization of the Processed Input", 
                             is_filtered=True)
-else:
-    st.warning("No input data available yet. Please upload a file or generate synthetic data.")
+# else:
+#     st.warning("No input data available yet. Please upload a file or generate synthetic data.")
