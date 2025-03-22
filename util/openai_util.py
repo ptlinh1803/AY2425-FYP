@@ -87,8 +87,6 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title, show_bps=Fa
 
         if col in ticker_mapping:
             col = ticker_mapping[col]
-        else:
-            col = ""
 
         if show_bps:
             bps_change = change / 0.01

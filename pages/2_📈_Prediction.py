@@ -312,6 +312,13 @@ else:
 
 # Display the processed input DataFrame
 if st.session_state.input_df is not None:
+    if st.session_state.input_df.isnull().values.any():
+        st.session_state.original_input_df = st.session_state.input_df.copy()
+        st.write("Missing values detected in the input. They have been filled with 0 to ensure a smooth prediction process.")
+        st.session_state.input_df.fillna(0, inplace=True)
+    else:
+        st.session_state.original_input_df = st.session_state.input_df.copy()
+
     # prepare to ask OpenAI API
     summary_for_prompt = []
 
@@ -331,7 +338,7 @@ if st.session_state.input_df is not None:
     # Draw plot
     with tab2:
         required_columns = [col for col in st.session_state.input_df if col != "Date"]
-        viz.plot_multiple_lines(st.session_state.input_df, 
+        viz.plot_multiple_lines(st.session_state.original_input_df, 
                                 None, 
                                 None, 
                                 required_columns, 
