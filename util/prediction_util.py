@@ -15,7 +15,7 @@ available_quarters = pd.read_csv("data/synthetic_data/available_quarters.csv")
 
 long_sequences = pd.read_csv("data/synthetic_data/summary_long_sequences.csv")
 
-# 1. Process uploaded input
+# 1. Process uploaded input-----------------------------------------------------
 @st.cache_data
 def preprocess_upload_input(original_df, selected_maturities, column_mapping, has_date, date_order, pred_window):
     if not selected_maturities:
@@ -66,7 +66,7 @@ def preprocess_upload_input(original_df, selected_maturities, column_mapping, ha
 
     return df
 
-# 2. Process synthetic data
+# 2. Process synthetic data-----------------------------------------------------
 # 2.1. Get available years for each country + maturity
 # used in main Prediction page
 @st.cache_data
@@ -280,3 +280,23 @@ def generate_synthetic_data(synthesizer, country, selected_maturities, pred_wind
     except Exception as e:
         st.warning(f"Error generating synthetic data: {e}")
         return None
+
+# 3. Show metadata of input-----------------------------------------------------
+def show_input_metadata(input_metadata):
+    # Format for display
+    display_meta = {
+        "Country": input_metadata.get("country", "N/A"),
+        "Maturities": ", ".join(input_metadata.get("maturities", [])) or "N/A",
+        "Lookback Window": input_metadata.get("lookback_window", "N/A"),
+        "Input Mode": input_metadata.get("input_mode", "N/A")
+    }
+
+    if "noise_level" in input_metadata:
+        display_meta["Additional Noise"] = f"{input_metadata['noise_level'] / 0.01:.0f} bps"
+    
+    st.markdown("**Metadata of the latest processed input:**")
+    st.table(pd.DataFrame(display_meta.items(), columns=["Parameter", "Value"]))
+
+    if "quarter_year_mapping" in input_metadata:
+        st.markdown("**Reference Time Periods for Each Maturity:**")
+        st.table(pd.DataFrame(input_metadata["quarter_year_mapping"].items(), columns=["Maturity", "Reference Period"]))

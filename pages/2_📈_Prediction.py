@@ -76,10 +76,6 @@ st.sidebar.radio(
     on_change=update_input_mode
 )
 
-# Predict button - THIS SHOULD BE ENABLED IF SOME CONDITIONS ARE SATISFIED
-if st.sidebar.button("Predict", type="primary"):
-    st.sidebar.success("Start predicting...")
-
 # Main page -------------------------------------
 st.title(st.session_state.country_pred)
 st.header("Prepare Input")
@@ -317,25 +313,12 @@ if st.session_state.input_df is not None:
 
     st.header("Input Overview")
     st.info("**Want to overwrite?** Process a new file or generate new synthetic data.")
+
+    # Display metadata
     if st.session_state.input_metadata is not None:
-        # Format for display
-        display_meta = {
-            "Country": st.session_state.input_metadata.get("country", "N/A"),
-            "Maturities": ", ".join(st.session_state.input_metadata.get("maturities", [])) or "N/A",
-            "Lookback Window": st.session_state.input_metadata.get("lookback_window", "N/A"),
-            "Input Mode": st.session_state.input_metadata.get("input_mode", "N/A")
-        }
+        pred.show_input_metadata(st.session_state.input_metadata)
 
-        if "noise_level" in st.session_state.input_metadata:
-            display_meta["Additional Noise"] = f"{st.session_state.input_metadata['noise_level'] / 0.01:.0f} bps"
-        
-        st.markdown("**Metadata of the latest processed input:**")
-        st.table(pd.DataFrame(display_meta.items(), columns=["Parameter", "Value"]))
-
-        if "quarter_year_mapping" in st.session_state.input_metadata:
-            st.markdown("**Reference Time Periods for Each Maturity:**")
-            st.table(pd.DataFrame(st.session_state.input_metadata["quarter_year_mapping"].items(), columns=["Maturity", "Reference Period"]))
-
+    # Display more details
     tab1, tab2, tab3 = st.tabs(["🔢 View Input as a Table", "📊 Visualize Input Data", "📑 Input Trend Summary"])
     # Show input table
     with tab1:
@@ -350,8 +333,13 @@ if st.session_state.input_df is not None:
                                 required_columns, 
                                 "Visualization of the Processed Input", 
                                 is_filtered=True)
-        
+    
+    # Summary trends
     with tab3:
         summary_input_trends = openai_util.summarize_basic_trends(st.session_state.input_df, None, None, "Input Yields", show_bps=True)
         summary_for_prompt.append(summary_input_trends)
         st.markdown(summary_input_trends)
+
+    # Predict button - THIS SHOULD BE ENABLED ONLY IF INPUT IS READY
+    if st.sidebar.button("Predict", type="primary"):
+        st.sidebar.success("Start predicting...")
