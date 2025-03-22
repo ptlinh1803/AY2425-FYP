@@ -227,26 +227,47 @@ else:
                 "🧠 This flexibility is helpful for testing ideas or filling missing data, "
                 "but for realistic simulations, it's better to use the same time period for all maturities."
             )
-        st.markdown("Choose year and quarter for each maturity individually")
 
-        for maturity in st.session_state.selected_maturities:
-            # Show the maturity label on its own line
-            st.markdown(f"**{maturity}**")
+        # Option to apply the same period for all (selected by Default)
+        use_same_reference = st.checkbox("Use the same year and quarter for all maturities (if available)")
+        if use_same_reference:
+            st.markdown("**Select a shared year and quarter for all maturities:**")
 
-            # Create 2 columns for year and quarter
             col1, col2 = st.columns(2)
 
-            # Get year options
-            year_options = pred.get_available_year(st.session_state.country_pred, maturity)
             with col1:
-                year = st.selectbox(f"Year ({maturity})", year_options, key=f"{maturity}_year")
+                common_year = st.selectbox("Year (shared)", list(range(2000, 2025)), key="shared_year", index=24)
 
-            # Get quarter options based on year
-            quarter_options = pred.get_available_quarter_for_year(st.session_state.country_pred, maturity, year)
             with col2:
-                quarter = st.selectbox(f"Quarter ({maturity})", quarter_options, key=f"{maturity}_quarter")
+                if common_year == 2024:
+                    common_quarters = ['Q1', 'Q2', 'Q3']
+                else:
+                    common_quarters = ['Q1', 'Q2', 'Q3', 'Q4']
+                common_quarter = st.selectbox("Quarter (shared)", common_quarters, key="shared_quarter")
+
+        for maturity in st.session_state.selected_maturities:
+            st.markdown(f"**{maturity}**")
+
+            available_years = pred.get_available_year(st.session_state.country_pred, maturity)
+            if use_same_reference and common_year in available_years:
+                available_quarters = pred.get_available_quarter_for_year(st.session_state.country_pred, maturity, common_year)
+                if common_quarter in available_quarters:
+                    # ✅ Apply shared selection
+                    st.success(f"Using {common_year}{common_quarter} for {maturity}")
+                    quarter_year_mapping[maturity] = f"{common_year}{common_quarter}"
+                    continue  # Skip manual selection
+
+            # Otherwise fallback to manual
+            col1, col2 = st.columns(2)
+            with col1:
+                year = st.selectbox(f"Year ({maturity})", available_years, key=f"{maturity}_year")
+
+            available_quarters = pred.get_available_quarter_for_year(st.session_state.country_pred, maturity, year)
+            with col2:
+                quarter = st.selectbox(f"Quarter ({maturity})", available_quarters, key=f"{maturity}_quarter")
 
             quarter_year_mapping[maturity] = f"{year}{quarter}"
+
 
     # 2. Choose volatility (add noise)
     st.markdown("##### Add more randomness to simulate market volatility")
