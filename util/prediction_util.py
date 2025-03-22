@@ -267,6 +267,9 @@ def generate_synthetic_data(synthesizer, country, selected_maturities, pred_wind
     volatility: default = 0.0
     """
     try:
+        if not selected_maturities:
+            st.warning("Please select at least 1 maturity to predict")
+            return None
         # 1. Generate raw synthetic data
         fake_data = generate_raw_synthetic_data(synthesizer, country, selected_maturities, quarter_year_mapping, pred_window)
 

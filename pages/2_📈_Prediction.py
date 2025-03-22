@@ -32,12 +32,20 @@ if "output_df" not in st.session_state:
 # Callback function to update session state
 def update_country_pred():
     st.session_state.country_pred = st.session_state["country_pred_picker"]
+    st.session_state.input_df = None
+    st.session_state.output_df = None
 def update_pred_window():
     st.session_state.pred_window = st.session_state["pred_window_picker"]
+    st.session_state.input_df = None
+    st.session_state.output_df = None
 def update_input_mode():
     st.session_state.input_mode = st.session_state["input_mode_picker"]
+    st.session_state.input_df = None
+    st.session_state.output_df = None
 def update_selected_maturities():
     st.session_state.selected_maturities = st.session_state["maturity_picker"]
+    st.session_state.input_df = None
+    st.session_state.output_df = None
 
 # Select country
 st.sidebar.selectbox(
