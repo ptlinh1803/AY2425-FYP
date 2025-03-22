@@ -24,6 +24,10 @@ if "selected_maturities" not in st.session_state:
     st.session_state.selected_maturities = ["3M Yield", "2Y Yield", "5Y Yield", "10Y Yield", "30Y Yield"]
 if "input_metadata" not in st.session_state:
     st.session_state.input_metadata = None
+if "input_df" not in st.session_state:
+    st.session_state.input_df = None
+if "output_df" not in st.session_state:
+    st.session_state.output_df = None
 
 # Callback function to update session state
 def update_country_pred():
@@ -342,4 +346,42 @@ if st.session_state.input_df is not None:
 
     # Predict button - THIS SHOULD BE ENABLED ONLY IF INPUT IS READY
     if st.sidebar.button("Predict", type="primary"):
-        st.sidebar.success("Start predicting...")
+        with st.spinner("🔄 Generating predictions... Please wait.", show_time=True):
+            # Get prediction
+            st.session_state.output_df = pred.get_all_predictions(st.session_state.input_df, 
+                                                                  st.session_state.country_pred, 
+                                                                  st.session_state.selected_maturities, 
+                                                                  st.session_state.pred_window)
+        if st.session_state.output_df is not None and not st.session_state.output_df.empty:
+            st.success("Prediction completed successfully!")
+
+    # Show the latest predicted result
+    if st.session_state.output_df is not None and not st.session_state.output_df.empty:
+        st.header("Prediction Results")
+        # Display more details
+        tab1, tab2, tab3 = st.tabs(["🔢 View Output as a Table", "📊 Visualize Output Data", "📑 Input Output Summary"])
+        # Show input table
+        with tab1:
+            st.dataframe(st.session_state.output_df)
+
+        # Draw plot
+        with tab2:
+            pred.visualize_prediction_output(st.session_state.output_df)
+            
+        # Summary trends
+        with tab3:
+            summary_output_trends = openai_util.summarize_basic_trends(st.session_state.output_df, None, None, "Forecasted Yield Curve", show_bps=True)
+            summary_for_prompt.append(summary_output_trends)
+            st.markdown(summary_output_trends)
+
+        # Download
+        csv = pred.convert_for_download(st.session_state.output_df)
+        st.download_button(
+            label="Save Results as CSV",
+            data=csv,
+            file_name="prediction_result.csv",
+            mime="text/csv",
+            icon=":material/download:",
+        )
+
+

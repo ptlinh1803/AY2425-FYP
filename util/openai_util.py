@@ -91,11 +91,17 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title, show_bps=Fa
             col = ""
 
         if show_bps:
-            bps_change = change / 0.01 # yield is alr shown in %
-            summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {percent_change:+.3f}%, {bps_change:+.0f} bps).\n")
+            bps_change = change / 0.01
+            if isinstance(percent_change, str):  # e.g. "N/A"
+                summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {bps_change:+.0f} bps).\n")
+            else:
+                summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {percent_change:+.3f}%, {bps_change:+.0f} bps).\n")
         else:
-            # Format the summary
-            summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {percent_change:+.3f}%).\n")
+            if isinstance(percent_change, str):
+                summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}).\n")
+            else:
+                summary.append(f"{col} {trend} ({start:.3f} → {end:.3f}, Change: {change:+.3f}, {percent_change:+.3f}%).\n")
+
     
     return "\n".join(summary)
 

@@ -3,6 +3,7 @@ import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import ast
+import plotly.graph_objects as go
 
 pred_window_mapping = {
     "5 past days → Predict next 1 day": 5,
@@ -278,7 +279,7 @@ def generate_synthetic_data(synthesizer, country, selected_maturities, pred_wind
         # return
         return final_df
     except Exception as e:
-        st.warning(f"Error generating synthetic data: {e}")
+        st.error(f"Error generating synthetic data: {e}")
         return None
 
 # 3. Show metadata of input-----------------------------------------------------
@@ -300,3 +301,155 @@ def show_input_metadata(input_metadata):
     if "quarter_year_mapping" in input_metadata:
         st.markdown("**Reference Time Periods for Each Maturity:**")
         st.table(pd.DataFrame(input_metadata["quarter_year_mapping"].items(), columns=["Maturity", "Reference Period"]))
+
+
+# 4. Prediction-----------------------------------------------------
+# 4.1. Load model and scalers for a single maturity
+# used in 4.2
+def load_model_and_scalers(country, maturity, pred_window):
+    """
+    for a single maturity of a country
+    e.g. load_model_and_scalers("Japan", "5Y Yield", "5 past days → Predict next 1 day")
+    feature_scaler is not actually in use cuz the only feature is the historical yield
+    """
+    # import here to reduce loading time at the start of the page
+    import tensorflow as tf 
+    import joblib
+
+    pred_window_to_folder_name = {
+        "5 past days → Predict next 1 day": "5in-1out",
+        "30 past days → Predict next 5 days": "30in-5out",
+        "60 past days → Predict next 7 days": "60in-7out",
+        "90 past days → Predict next 30 days": "90in-30out"
+    }
+    path = f"models/{country}/{maturity}"
+    subfolder = pred_window_to_folder_name[pred_window]
+
+    model_filepath = f"{path}/{subfolder}/lstm.keras"
+    scaler_filepath = f"{path}/{subfolder}/scalers.pkl"
+
+    # Load the trained model
+    model = tf.keras.models.load_model(model_filepath)
+    print(f"Model loaded from: {model_filepath}")
+
+    # Load the scalers
+    feature_scaler, target_scaler = joblib.load(scaler_filepath)
+    print(f"Scalers loaded from: {scaler_filepath}")
+
+    return model, feature_scaler, target_scaler
+
+# 4.2. Get prediction for 1 maturity
+# used in 4.3
+def get_prediction_single_maturity(input_df, country, maturity, pred_window):
+    df = input_df.copy()
+    model, _, target_scaler = load_model_and_scalers(country, maturity, pred_window)
+
+    if maturity not in df.columns:
+        raise ValueError(f"Maturity '{maturity}' not found in input data.")
+
+
+    data = df[maturity]
+    data_df = data.to_frame(name="Close")
+
+    # get input X
+    X = data_df.values
+
+    # Scale X using target_scaler
+    X_scaled = target_scaler.transform(pd.DataFrame(X, columns=data_df.columns))
+
+    # Reshape X to match LSTM input shape (samples, time steps, features)
+    X_scaled = np.reshape(X_scaled, (1, X_scaled.shape[0], 1))  # (1 sample, input_days time steps, 1 feature)
+
+    # Predict using the loaded model
+    y_pred_scaled = model.predict(X_scaled)
+
+    # Inverse transform predictions back to original scale and reshape to (output_days,1)
+    y_pred_reshaped = target_scaler.inverse_transform(y_pred_scaled).reshape(-1, 1)
+
+    # Create df_single of the prediction
+    df_single = pd.DataFrame(
+        y_pred_reshaped,
+        columns=[f"Predicted {maturity}"]
+    )
+
+    return df_single
+
+# 4.3. Get prediction all at once
+def get_all_predictions(input_df, country, selected_maturities, pred_window):
+    """
+    input_df: st.session_state.input_df
+    country: st.session_state.country_pred
+    selected_maturities: st.session_state.selected_maturities
+    pred_window: st.session_state.pred_window
+    """
+    final_df = pd.DataFrame()
+
+    if not selected_maturities:
+        raise ValueError("No maturities selected for prediction.")
+    
+    try:
+        for maturity in selected_maturities:
+            df_temp = get_prediction_single_maturity(input_df, country, maturity, pred_window)
+
+            # Combine columns horizontally
+            if final_df.empty:
+                final_df = df_temp
+            else:
+                final_df = pd.concat([final_df, df_temp], axis=1)
+
+        return final_df
+    except Exception as e:
+        st.error(f"Error predicting: {e}")
+        return None
+
+# 4.4. Convert output_df to csv for download 
+@st.cache_data
+def convert_for_download(df):
+    return df.to_csv().encode("utf-8")
+
+# 4.5. Plot outputs
+def visualize_prediction_output(output_df):
+    """
+    Visualize prediction results from output_df.
+    Each maturity is plotted in a separate Plotly chart.
+    """
+    if output_df is None or output_df.empty:
+        st.info("No prediction data available.")
+        return
+
+    # Handle the special case: only one row of prediction
+    if len(output_df) == 1:
+        st.warning("Only one predicted value. Plotting skipped.")
+        for col in output_df.columns:
+            st.markdown(f"**{col}**: {output_df[col].iloc[0]:.4f}")
+        return
+
+    st.markdown("### 📊 Forecast Charts (per maturity)")
+    for col in output_df.columns:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=list(range(len(output_df))),
+            y=output_df[col],
+            mode='lines+markers',
+            name=col,
+            line=dict(width=2),
+            marker=dict(size=6)
+        ))
+
+        fig.update_layout(
+            title=col,
+            xaxis_title="Prediction Step",
+            yaxis_title="Yield",
+            hovermode="x unified",
+            margin=dict(l=30, r=30, t=40, b=30),
+            height=350,
+        )
+
+        # Enable scroll-to-zoom, drag, zoom buttons, etc.
+        fig.update_layout(
+            dragmode='zoom',
+            hoverdistance=100,
+            showlegend=False
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
