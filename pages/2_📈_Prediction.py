@@ -3,7 +3,7 @@ import pandas as pd
 import util.visualization_util as viz
 import util.prediction_util as pred
 
-# VISUALIZATION PAGE
+# PREDICTION PAGE
 st.set_page_config(
     page_title="Prediction",
     page_icon="📈",
@@ -172,15 +172,82 @@ if st.session_state.input_mode == "Upload your data":
 
 # 2. GENERATE SYNTHETIC DATA
 else:
-    st.success("Generate synthetic data here")
+    # 0. Load synthesizer
+    @st.cache_resource
+    def load_synthesizer():
+        import torch
+        from sdv.sequential import PARSynthesizer
+
+        # work around to avoid streamlit's warning about torch
+        try:
+            if hasattr(torch, "classes") and hasattr(torch.classes, "__path__"):
+                torch.classes.__path__ = []
+        except Exception:
+            pass
+        return PARSynthesizer.load("data/synthetic_data/yield_synthesizer_newest.pkl")
+
+    synthesizer = load_synthesizer()
 
     # 1. Choose year and quarter to generate synthetic data from
+    st.markdown("##### Select a reference time period you want the synthetic data to resemble")
     # 1.1. if Japan: choose the same year and quarter for all
-    #...
+    if st.session_state.country_pred == "Japan":
+        st.write("Choose the same year and quarter for all maturities")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            year = st.selectbox("Year", list(range(2000, 2025)), key="japan_year", index=24)
+
+        with col2:
+            if year == 2024:
+                quarter_options = ['Q1', 'Q2', 'Q3']
+            else:
+                quarter_options = ['Q1', 'Q2', 'Q3', 'Q4']
+            quarter = st.selectbox("Quarter", quarter_options, key="japan_quarter")
+
+        # Build the mapping
+        quarter_year_mapping = dict()
+        for maturity in st.session_state.selected_maturities:
+            quarter_year_mapping[maturity] = f"{year}{quarter}"
 
     # 1.2. if China/Australia: choose year and quarter for each maturity
-    # explain why in a st.info
-    #...
+    else:
+        st.info(
+            f"Different maturities in {st.session_state.country_pred} may have different available time periods. "
+        )
+        with st.expander("⚠️ Why does this matter?"):
+            st.warning(
+                "📌 We need to select reference time for each maturity individually because of differences in available data. "
+                "If a selected time period wasn't part of the training data for a maturity, the model may not generate realistic results.\n\n"
+                "📊 In real financial markets, yields for all maturities in a country are observed at the same time. "
+                "If you choose different years and quarters for each maturity, the resulting synthetic yield curve "
+                "may not reflect a real-world yield curve structure.\n\n"
+                "🧠 This flexibility is helpful for testing ideas or filling missing data, "
+                "but for realistic simulations, it's better to use the same time period for all maturities."
+            )
+        st.markdown("Choose year and quarter for each maturity individually")
+        quarter_year_mapping = dict()
+
+        for maturity in st.session_state.selected_maturities:
+            # Show the maturity label on its own line
+            st.markdown(f"**{maturity}**")
+
+            # Create 2 columns for year and quarter
+            col1, col2 = st.columns(2)
+
+            # Get year options
+            year_options = pred.get_available_year(st.session_state.country_pred, maturity)
+            with col1:
+                year = st.selectbox(f"Year ({maturity})", year_options, key=f"{maturity}_year")
+
+            # Get quarter options based on year
+            quarter_options = pred.get_available_quarter_for_year(st.session_state.country_pred, maturity, year)
+            with col2:
+                quarter = st.selectbox(f"Quarter ({maturity})", quarter_options, key=f"{maturity}_quarter")
+
+            quarter_year_mapping[maturity] = f"{year}{quarter}"
+
 
     # 2. Choose volatility (add noise)
     #...
@@ -205,7 +272,7 @@ if st.session_state.input_df is not None:
             "Lookback Window": st.session_state.input_metadata.get("lookback_window", "N/A"),
             "Input Mode": st.session_state.input_metadata.get("input_mode", "N/A")
         }
-        st.markdown("**Metadata of current processed input:**")
+        st.markdown("**Metadata of the latest processed input:**")
         st.table(pd.DataFrame(display_meta.items(), columns=["Parameter", "Value"]))
 
     st.info("Process a new file or generate new synthetic data to overwrite.")

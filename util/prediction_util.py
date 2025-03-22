@@ -1,8 +1,8 @@
 import pandas as pd
 import streamlit as st
 from sklearn.preprocessing import MinMaxScaler
-from sdv.sequential import PARSynthesizer
 import numpy as np
+import ast
 
 pred_window_mapping = {
     "5 past days → Predict next 1 day": 5,
@@ -11,11 +11,9 @@ pred_window_mapping = {
     "90 past days → Predict next 30 days": 90
 }
 
-available_quarters = pd.read_csv("synthetic_data/available_quarters.csv")
+available_quarters = pd.read_csv("data/synthetic_data/available_quarters.csv")
 
-long_sequences = pd.read_csv("synthetic_data/summary_long_sequences.csv")
-
-synthesizer = PARSynthesizer.load('synthetic_data/yield_synthesizer_newest.pkl')
+long_sequences = pd.read_csv("data/synthetic_data/summary_long_sequences.csv")
 
 # 1. Process uploaded input
 @st.cache_data
@@ -76,6 +74,7 @@ def get_available_year(country, maturity_yield):
     e.g. get_available_year("China", "3M Yield")
     output: [2011, 2012, 2013, 2014, 2015, 2016]
     """
+    global available_quarters
     target_maturity = f"{country} {maturity_yield}"
     row = available_quarters[available_quarters['Maturity'] == target_maturity]
     
@@ -85,6 +84,14 @@ def get_available_year(country, maturity_yield):
         return []
     
     quarters = row.iloc[0]['Quarter_Year']
+    # Handle stringified list case
+    if isinstance(quarters, str):
+        try:
+            quarters = ast.literal_eval(quarters)
+        except Exception:
+            st.warning(f"Invalid format in Quarter_Year for {target_maturity}")
+            return []
+        
     years = sorted(set(int(q[:4]) for q in quarters))  # extract year from each "YYYYQx"
     return years
 
@@ -95,6 +102,7 @@ def get_available_quarter_for_year(country, maturity_yield, year):
     e.g. get_available_quarter_for_year("China", "3M Yield", 2016)
     output: ['Q1', 'Q2']
     """
+    global available_quarters
     years = get_available_year(country, maturity_yield)
     target_maturity = f"{country} {maturity_yield}"
     
@@ -109,8 +117,17 @@ def get_available_quarter_for_year(country, maturity_yield, year):
         return []
 
     quarters = row.iloc[0]['Quarter_Year']
-    available_quarters = [q[-2:] for q in quarters if int(q[:4]) == year]
-    return sorted(available_quarters)
+    # Handle stringified list case
+    if isinstance(quarters, str):
+        try:
+            quarters = ast.literal_eval(quarters)
+        except Exception:
+            st.warning(f"Invalid format in Quarter_Year for {target_maturity}")
+            return []
+        
+    available_quarters_list = [q[-2:] for q in quarters if int(q[:4]) == year]
+    return sorted(available_quarters_list)
+
 
 # 2.3. Get min and max yield for the chosen priod to mimic
 @st.cache_data
@@ -160,7 +177,7 @@ def construct_scenario_context(country, maturities, quarter_year_mapping):
 
 # 2.5. Generate synthetic data (raw, unscaled, long format)
 @st.cache_data
-def generate_raw_synthetic_data(country, maturities, quarter_year_mapping, pred_window):
+def generate_raw_synthetic_data(synthesizer, country, maturities, quarter_year_mapping, pred_window):
     sequence_length = pred_window_mapping[pred_window]
 
     scenario_context = construct_scenario_context(country, maturities, quarter_year_mapping)
