@@ -68,6 +68,7 @@ def preprocess_upload_input(original_df, selected_maturities, column_mapping, ha
 
 # 2. Process synthetic data
 # 2.1. Get available years for each country + maturity
+# used in main Prediction page
 @st.cache_data
 def get_available_year(country, maturity_yield):
     """
@@ -96,6 +97,7 @@ def get_available_year(country, maturity_yield):
     return years
 
 # 2.2. Get available quarters for the chosen year
+# used in main prediction page
 @st.cache_data
 def get_available_quarter_for_year(country, maturity_yield, year):
     """
@@ -130,6 +132,7 @@ def get_available_quarter_for_year(country, maturity_yield, year):
 
 
 # 2.3. Get min and max yield for the chosen priod to mimic
+# used in 2.7. rescale_and_add_noise()
 @st.cache_data
 def get_min_max_yield(country, maturity_yield, year, quarter):
     """
@@ -156,6 +159,7 @@ def get_min_max_yield(country, maturity_yield, year, quarter):
 
 
 # 2.4. Construct scenario context
+# used in 2.5 generate_raw_synthetic_data()
 @st.cache_data
 def construct_scenario_context(country, maturities, quarter_year_mapping):
     """
@@ -176,12 +180,13 @@ def construct_scenario_context(country, maturities, quarter_year_mapping):
     return scenario_context
 
 # 2.5. Generate synthetic data (raw, unscaled, long format)
+# 1st step of 2.8
 @st.cache_data
-def generate_raw_synthetic_data(synthesizer, country, maturities, quarter_year_mapping, pred_window):
+def generate_raw_synthetic_data(_synthesizer, country, maturities, quarter_year_mapping, pred_window):
     sequence_length = pred_window_mapping[pred_window]
 
     scenario_context = construct_scenario_context(country, maturities, quarter_year_mapping)
-    fake_data = synthesizer.sample_sequential_columns(
+    fake_data = _synthesizer.sample_sequential_columns(
         context_columns=scenario_context,
         sequence_length=sequence_length
     )
@@ -190,6 +195,7 @@ def generate_raw_synthetic_data(synthesizer, country, maturities, quarter_year_m
 
 
 # 2.6. Reshape raw data the synthesizer produces
+# 2nd step of 2.8
 @st.cache_data
 def reshape_fake_data_to_wide(fake_data):
     """
@@ -208,11 +214,18 @@ def reshape_fake_data_to_wide(fake_data):
     # Remove column index name
     wide_df.columns.name = None
 
+    # Reorder columns to preferred order if all exist
+    preferred_order = ["3M Yield", "2Y Yield", "5Y Yield", "10Y Yield", "30Y Yield"]
+    existing_order = [col for col in preferred_order if col in wide_df.columns]
+    remaining_cols = [col for col in wide_df.columns if col not in existing_order]
+    wide_df = wide_df[existing_order + remaining_cols]
+
     return wide_df
 
 # 2.7. Rescale and add noise
+# 3rd step of 2.8
 @st.cache_data
-def rescale_and_add_noise(df_wide, country, quarter_year_mapping, volatility=0.0):
+def rescale_add_noise(df_wide, country, quarter_year_mapping, volatility=0.0):
     """
     df_wide: reshaped synthetic data to wide format
     country: user selection
@@ -242,4 +255,28 @@ def rescale_and_add_noise(df_wide, country, quarter_year_mapping, volatility=0.0
 
     return df_scaled
 
+# 2.8. Master function to generate synthetic data, reshape, and rescale
+def generate_synthetic_data(synthesizer, country, selected_maturities, pred_window, quarter_year_mapping, volatility):
+    """
+    synthesizer: load from data/synthetic_data/yield_synthesizer_newest.pkl
+    country: st.session_state.country_pred
+    selected_maturities: st.session_state.selected_maturities
+    pred_window=st.session_state.pred_window
+    quarter_year_mapping: default first option
+    volatility: default = 0.0
+    """
+    try:
+        # 1. Generate raw synthetic data
+        fake_data = generate_raw_synthetic_data(synthesizer, country, selected_maturities, quarter_year_mapping, pred_window)
 
+        # 2. Reshape raw data from long to wide format
+        wide_df = reshape_fake_data_to_wide(fake_data)
+
+        # 3. Rescale and add noise
+        final_df = rescale_add_noise(wide_df, country, quarter_year_mapping, volatility)
+
+        # return
+        return final_df
+    except Exception as e:
+        st.warning(f"Error generating synthetic data: {e}")
+        return None

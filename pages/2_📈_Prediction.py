@@ -150,7 +150,7 @@ if st.session_state.input_mode == "Upload your data":
                 date_order = "Ignore"
 
             # --- Preprocess Data ---
-            if st.button("Preprocess Data"):
+            if st.button("Preprocess Data", key="process_upload_input"):
                 st.session_state.input_df = pred.preprocess_upload_input(
                     df,
                     selected_maturities=st.session_state.selected_maturities,
@@ -190,8 +190,9 @@ else:
 
     # 1. Choose year and quarter to generate synthetic data from
     st.markdown("##### Select a reference time period you want the synthetic data to resemble")
+    st.caption("Synthetic data reflects the conditions of the selected period, but is not real data — so it can still be used for fresh predictions.")
     quarter_year_mapping = dict()
-    # 1.1. if Japan: choose the same year and quarter for all
+    # if Japan: choose the same year and quarter for all
     if st.session_state.country_pred == "Japan":
         st.write("Choose the same year and quarter for all maturities")
 
@@ -211,7 +212,7 @@ else:
         for maturity in st.session_state.selected_maturities:
             quarter_year_mapping[maturity] = f"{year}{quarter}"
 
-    # 1.2. if China/Australia: choose year and quarter for each maturity
+    # if China/Australia: choose year and quarter for each maturity
     else:
         st.info(
             f"Different maturities in {st.session_state.country_pred} may have different available time periods."
@@ -261,17 +262,35 @@ else:
     st.caption(f"Current noise level: {volatility / 0.01:.0f} bps")
 
 
-    # 3. Process generated synthetic data (reformat to the standard form)
-    #...
+    # 3. Generate synthetic data
+    if st.button("Generate Synthetic Data", key="process_synthetic_input"):
+        st.session_state.input_df = pred.generate_synthetic_data(
+            synthesizer=synthesizer,
+            country=st.session_state.country_pred,
+            selected_maturities=st.session_state.selected_maturities,
+            pred_window=st.session_state.pred_window,
+            quarter_year_mapping=quarter_year_mapping,
+            volatility=volatility
+        )
 
-    # 4. save the generated data in st.session_state.input_df and save metadata
-    #...
+        if st.session_state.input_df is not None:
+            st.success("Successfully generated synthetic data!")
+
+            st.session_state.input_metadata = {
+                "country": st.session_state.country_pred,
+                "maturities": st.session_state.selected_maturities,
+                "lookback_window": st.session_state.pred_window,
+                "input_mode": st.session_state.input_mode,
+                "quarter_year_mapping": quarter_year_mapping,
+                "noise_level": volatility
+            }
 
 
 
 # Display the processed input DataFrame
 if st.session_state.input_df is not None:
-    st.header("Visualize the Processed Input")
+    st.header("Input Overview")
+    st.info("**Want to overwrite?** Process a new file or generate new synthetic data.")
     if st.session_state.input_metadata is not None:
         # Format for display
         display_meta = {
@@ -280,21 +299,30 @@ if st.session_state.input_df is not None:
             "Lookback Window": st.session_state.input_metadata.get("lookback_window", "N/A"),
             "Input Mode": st.session_state.input_metadata.get("input_mode", "N/A")
         }
+
+        if "noise_level" in st.session_state.input_metadata:
+            display_meta["Additional Noise"] = f"{st.session_state.input_metadata['noise_level'] / 0.01:.0f} bps"
+        
         st.markdown("**Metadata of the latest processed input:**")
         st.table(pd.DataFrame(display_meta.items(), columns=["Parameter", "Value"]))
 
-    st.info("Process a new file or generate new synthetic data to overwrite.")
-    # st.warning("Change this later: display the processed data + graph")
-    # if synthetic data, don't display "Date", or remove "Date" column completely
-    st.dataframe(st.session_state.input_df)
+        if "quarter_year_mapping" in st.session_state.input_metadata:
+            st.markdown("**Reference Time Periods for Each Maturity:**")
+            st.table(pd.DataFrame(st.session_state.input_metadata["quarter_year_mapping"].items(), columns=["Maturity", "Reference Period"]))
 
-    # draw plot
-    required_columns = [col for col in st.session_state.input_df if col != "Date"]
-    viz.plot_multiple_lines(st.session_state.input_df, 
-                            None, 
-                            None, 
-                            required_columns, 
-                            "Visualization of the Processed Input", 
-                            is_filtered=True)
+    tab1, tab2 = st.tabs(["🔢 View Input as a Table", "📊 Visualize Input Data"])
+    # Show input table
+    with tab1:
+        st.dataframe(st.session_state.input_df)
+
+    # Draw plot
+    with tab2:
+        required_columns = [col for col in st.session_state.input_df if col != "Date"]
+        viz.plot_multiple_lines(st.session_state.input_df, 
+                                None, 
+                                None, 
+                                required_columns, 
+                                "Visualization of the Processed Input", 
+                                is_filtered=True)
 # else:
 #     st.warning("No input data available yet. Please upload a file or generate synthetic data.")
