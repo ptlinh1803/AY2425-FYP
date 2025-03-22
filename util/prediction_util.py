@@ -453,3 +453,66 @@ def visualize_prediction_output(output_df):
         )
 
         st.plotly_chart(fig, use_container_width=True)
+
+# 4.6. Plot input along with output
+def visualize_input_and_prediction(input_df, output_df):
+    """
+    For each maturity, show a Plotly chart combining historical input and predicted output.
+    Assumes input_df uses raw maturity names (e.g., "3M Yield") and output_df uses "Predicted {maturity}".
+    """
+    if output_df is None or output_df.empty:
+        st.info("No prediction data available.")
+        return
+
+    st.markdown("### 📊 Input + Prediction Charts")
+
+    for col in output_df.columns:
+        # Extract maturity name from prediction column
+        if not col.startswith("Predicted "):
+            continue  # skip unexpected columns
+
+        maturity = col.replace("Predicted ", "")
+        
+        # Make sure corresponding input exists
+        if maturity not in input_df.columns:
+            st.warning(f"Input data for {maturity} not found.")
+            continue
+
+        # Prepare full sequence
+        historical = input_df[maturity].dropna().values
+        predicted = output_df[col].dropna().values
+        full_sequence = list(historical) + list(predicted)
+
+        # Generate x-axis
+        historical_x = list(range(len(historical)))
+        predicted_x = list(range(len(historical), len(historical) + len(predicted)))
+
+        # Plot
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=historical_x,
+            y=historical,
+            mode='lines',
+            name='Historical',
+            line=dict(color='royalblue')
+        ))
+        fig.add_trace(go.Scatter(
+            x=predicted_x,
+            y=predicted,
+            mode='lines',
+            name='Predicted',
+            line=dict(color='orange'),
+            # marker=dict(size=6)
+        ))
+
+        fig.update_layout(
+            title=maturity,
+            xaxis_title="Time Step",
+            yaxis_title="Yield",
+            hovermode="x unified",
+            margin=dict(l=30, r=30, t=40, b=30),
+            height=350,
+            legend=dict(orientation="h", y=-0.2)
+        )
+
+        st.plotly_chart(fig, use_container_width=True)

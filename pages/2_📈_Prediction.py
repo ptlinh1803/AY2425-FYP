@@ -366,7 +366,8 @@ if st.session_state.input_df is not None:
 
         # Draw plot
         with tab2:
-            pred.visualize_prediction_output(st.session_state.output_df)
+            # pred.visualize_prediction_output(st.session_state.output_df)
+            pred.visualize_input_and_prediction(st.session_state.input_df, st.session_state.output_df)
             
         # Summary trends
         with tab3:
