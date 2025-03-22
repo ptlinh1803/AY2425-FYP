@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import util.visualization_util as viz
 import util.prediction_util as pred
+import util.openai_util as openai_util
 
 # PREDICTION PAGE
 st.set_page_config(
@@ -85,6 +86,7 @@ st.header("Prepare Input")
 
 # 1. UPLOAD DATA
 if st.session_state.input_mode == "Upload your data":
+    st.caption("If your uploaded data has more rows than the selected lookback window, only the latest rows will be used for prediction.")
     uploaded_file = st.file_uploader(
         "Choose a file",
         type=["csv", "xlsx"]
@@ -310,6 +312,9 @@ else:
 
 # Display the processed input DataFrame
 if st.session_state.input_df is not None:
+    # prepare to ask OpenAI API
+    summary_for_prompt = []
+
     st.header("Input Overview")
     st.info("**Want to overwrite?** Process a new file or generate new synthetic data.")
     if st.session_state.input_metadata is not None:
@@ -331,7 +336,7 @@ if st.session_state.input_df is not None:
             st.markdown("**Reference Time Periods for Each Maturity:**")
             st.table(pd.DataFrame(st.session_state.input_metadata["quarter_year_mapping"].items(), columns=["Maturity", "Reference Period"]))
 
-    tab1, tab2 = st.tabs(["🔢 View Input as a Table", "📊 Visualize Input Data"])
+    tab1, tab2, tab3 = st.tabs(["🔢 View Input as a Table", "📊 Visualize Input Data", "📑 Input Trend Summary"])
     # Show input table
     with tab1:
         st.dataframe(st.session_state.input_df)
@@ -345,5 +350,8 @@ if st.session_state.input_df is not None:
                                 required_columns, 
                                 "Visualization of the Processed Input", 
                                 is_filtered=True)
-# else:
-#     st.warning("No input data available yet. Please upload a file or generate synthetic data.")
+        
+    with tab3:
+        summary_input_trends = openai_util.summarize_basic_trends(st.session_state.input_df, None, None, "Input Yields", show_bps=True)
+        summary_for_prompt.append(summary_input_trends)
+        st.markdown(summary_input_trends)

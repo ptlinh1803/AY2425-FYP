@@ -49,10 +49,11 @@ ticker_mapping = {
 # 1. Summarize basic trends
 def summarize_basic_trends(df_filtered, start_date, end_date, title, show_bps=False):
     # Ensure Date is the index and filter for the given period
-    df_filtered = df_filtered.loc[start_date:end_date]
+    if start_date and end_date:
+        df_filtered = df_filtered.loc[start_date:end_date]
 
-    # Drop columns containing "SMAVG" (if applicable)
-    df_filtered = df_filtered.loc[:, ~df_filtered.columns.str.contains("SMAVG")]
+        # Drop columns containing "SMAVG" (if applicable)
+        df_filtered = df_filtered.loc[:, ~df_filtered.columns.str.contains("SMAVG")]
 
     # Handle empty data
     if df_filtered.empty:
@@ -62,6 +63,8 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title, show_bps=Fa
 
     # Generate full summary
     for col in df_filtered.columns:
+        if not pd.api.types.is_numeric_dtype(df_filtered[col]):
+            continue  # Skip non-numeric columns like 'Date'
         series = df_filtered[col].dropna()
 
         if series.empty:
