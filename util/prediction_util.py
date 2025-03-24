@@ -38,6 +38,19 @@ def preprocess_upload_input(original_df, selected_maturities, column_mapping, ha
     # Rename columns
     df = df.rename(columns={v: k for k, v in column_mapping.items()})  # Swap keys & values
 
+    # ✅ Check if selected maturity columns are numeric
+    non_numeric_cols = [col for col in selected_maturities if not pd.api.types.is_numeric_dtype(df[col])]
+    if non_numeric_cols:
+        st.warning(f"Some selected maturity columns contain non-numeric values: {', '.join(non_numeric_cols)}. Please clean your file first.")
+        
+        for col in non_numeric_cols:
+            st.markdown(f"**Preview of non-numeric values in `{col}`:**")
+            # Show first 5 non-numeric values
+            non_numeric_rows = df[~df[col].apply(pd.api.types.is_number)].copy()
+            st.dataframe(non_numeric_rows[[col]].head(2))
+        
+        return None
+
     # Handle "Date" column and sort df
     if has_date:
         if "Date" not in original_df.columns:
@@ -501,14 +514,6 @@ def visualize_input_and_prediction(input_df, output_df):
         ))
 
         # Predicted line/point
-        # fig.add_trace(go.Scatter(
-        #     x=predicted_x,
-        #     y=predicted,
-        #     mode='lines',
-        #     name='Predicted',
-        #     line=dict(color='orange'),
-        #     # marker=dict(size=6)
-        # ))
         if len(predicted) == 1:
             fig.add_trace(go.Scatter(
                 x=predicted_x,
