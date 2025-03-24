@@ -100,11 +100,25 @@ st.header("Prepare Input")
 
 # 1. UPLOAD DATA
 if st.session_state.input_mode == "Upload your data":
-    st.caption("If your uploaded data has more rows than the selected lookback window, only the latest rows will be used for prediction.")
+    st.caption("Upload your data file to get started with yield curve prediction.")
     uploaded_file = st.file_uploader(
         "Choose a file",
         type=["csv", "xlsx"]
     )
+
+    with st.expander("📋 File Requirements & Guidelines"):
+        st.markdown("""
+        - File format must be `.csv` or `.xlsx`
+        - All selected columns must contain **numeric** values only  
+        - Data should be in **percentage units** (e.g. `3.5` for 3.5%, **not** `0.035`)  
+        - After uploading, you must **map each selected maturity** to a column in your file  
+        - **Headers are required** in the first row (no header → mapping will fail)  
+        - **No missing values** in the selected maturity columns (or they will be filled with `0`, which may affect predictions)  
+        - A **'Date'** column is optional:
+            - If present, it will be used to sort the data
+            - If not present, you'll need to specify the order (**Ascending** or **Descending**) manually
+        - If your uploaded data has more rows than the selected lookback window, **only the latest rows will be used** for prediction  
+        """)
     
     # If a file is uploaded, process it and store in session state
     if uploaded_file is not None:
@@ -343,7 +357,7 @@ if st.session_state.input_df is not None:
     summary_for_prompt = []
 
     st.header("Input Overview")
-    st.info("**Want to overwrite?** Process a new file or generate new synthetic data.")
+    st.info("**Want to overwrite?** Upload a new file or generate new synthetic data.")
 
     # Display metadata
     if st.session_state.input_metadata is not None:
