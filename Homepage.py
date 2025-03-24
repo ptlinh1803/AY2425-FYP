@@ -99,7 +99,7 @@ def run():
       - **📉 Businesses** use it for **borrowing cost forecasts**.
       """)
 
-    # APAC BOND MARKETS
+    # --- APAC BOND MARKETS ---
     st.markdown("## APAC Bond Markets")
 
     st.markdown("""
@@ -116,7 +116,7 @@ def run():
         st.markdown("#### 🌏")
         st.markdown("### **$140.7T**")
         st.markdown("**Worldwide**")
-        st.caption("Larger than global equity (~$115T)")
+        st.caption("Larger than global equity")
 
     with col2:
         st.markdown("#### 🇨🇳")
@@ -135,20 +135,49 @@ def run():
         st.markdown("### **$1T**")
         st.markdown("**Australia**")
         st.caption("Known for higher yields")
+    
+    # --- APP FEATURES ---
+    st.markdown("## 🔍 App Features")
+    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
-    # APP FEATURES
-    st.markdown("## 🔍 Explore the App")
-    col1, col2 = st.columns(2)
+    # --- Row 1: Visualization ---
+    row1_col1, row1_col2 = st.columns([1, 1.2])  # Slightly wider for text
 
-    with col1:
+    with row1_col1:
         st.image("assets/visualization_preview.png", caption="Visualization Preview", use_container_width=True)
         if st.button("Go to Visualization Page"):
             st.switch_page("pages/1_📊_Visualization.py")
 
-    with col2:
-        st.image("assets/prediction_preview.png", caption="Prediction View", use_container_width=True)
+    with row1_col2:
+        st.markdown("#### 📊 Visualization")
+        st.markdown("""
+        - View the full yield curve for a specific day  
+        - Track how the curve evolves over a selected time period  
+        - Explore key macroeconomic indicators like **CPI**, **interest rates**, etc.
+        - Get AI-generated insights into the yield curve and its relationship with macro factors  
+        """)
+
+    # Spacer
+    st.markdown("---")
+
+    # --- Row 2: Prediction ---
+    row2_col1, row2_col2 = st.columns([1.2, 1])
+
+    with row2_col1:
+        st.markdown("#### 📈 Prediction")
+        st.markdown("""
+        - Upload your own data or use synthetic sample data  
+        - Select different lookback/prediction windows (e.g. 5→1, 30→5, 60→7, 90→30 days)  
+        - Predict one or multiple yield maturities at once  
+        - Receive AI-generated summaries of forecast results  
+        """)
+
+    with row2_col2:
+        st.image("assets/prediction_preview.png", caption="Prediction Preview", use_container_width=True)
         if st.button("Go to Prediction Page"):
             st.switch_page("pages/2_📈_Prediction.py")
+
+
 
 
 
