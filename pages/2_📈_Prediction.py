@@ -372,7 +372,9 @@ if st.session_state.input_df is not None:
         st.markdown(summary_input_trends)
 
     # Predict button - THIS SHOULD BE ENABLED ONLY IF INPUT IS READY
-    if st.sidebar.button("Predict", type="primary"):
+    if st.sidebar.button("Predict", 
+                         type="primary", 
+                         help="Please make sure you have selected the correct settings for your data (country, lookback window, etc)."):
         with st.spinner("🔄 Generating predictions... Please wait.", show_time=True):
             # Get prediction
             st.session_state.output_df = pred.get_all_predictions(st.session_state.input_df, 
