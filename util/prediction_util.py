@@ -490,7 +490,7 @@ def visualize_input_and_prediction(input_df, output_df):
         historical_x = list(range(len(historical)))
         predicted_x = list(range(len(historical), len(historical) + len(predicted)))
 
-        # Plot
+        # Plot historical
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=historical_x,
@@ -499,14 +499,32 @@ def visualize_input_and_prediction(input_df, output_df):
             name='Historical',
             line=dict(color='royalblue')
         ))
-        fig.add_trace(go.Scatter(
-            x=predicted_x,
-            y=predicted,
-            mode='lines',
-            name='Predicted',
-            line=dict(color='orange'),
-            # marker=dict(size=6)
-        ))
+
+        # Predicted line/point
+        # fig.add_trace(go.Scatter(
+        #     x=predicted_x,
+        #     y=predicted,
+        #     mode='lines',
+        #     name='Predicted',
+        #     line=dict(color='orange'),
+        #     # marker=dict(size=6)
+        # ))
+        if len(predicted) == 1:
+            fig.add_trace(go.Scatter(
+                x=predicted_x,
+                y=predicted,
+                mode='markers',
+                name='Predicted',
+                marker=dict(color='orange', size=8, symbol='circle')
+            ))
+        else:
+            fig.add_trace(go.Scatter(
+                x=predicted_x,
+                y=predicted,
+                mode='lines',
+                name='Predicted',
+                line=dict(color='orange')
+            ))
 
         fig.update_layout(
             title=maturity,

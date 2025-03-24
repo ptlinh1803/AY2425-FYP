@@ -20,7 +20,7 @@ def run():
 
       - 📊 Visualize historical trends of **bond yields** and **macroeconomic indicators** from 2000 to 2024  
       - 🌍 Explore yield curve dynamics for **Japan**, **China**, and **Australia**  
-      - 🧠 Forecast future curves with an **LSTM model** using your own data or sample datasets  
+      - 🧠 Forecast future curves with **LSTM models** using your own data or sample datasets  
       - ⏳ Experiment with different **forecast windows**  
       - 🤖 Get **AI-generated summaries** of historical yield patterns and future predictions from **GPT-4o**
       """)

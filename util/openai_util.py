@@ -75,9 +75,17 @@ def summarize_basic_trends(df_filtered, start_date, end_date, title, show_bps=Fa
             continue
 
         if len(series) == 1:
-            date_str = series.index[0].strftime('%d/%m/%Y')
-            summary.append(f"📈 {ticker_mapping.get(col, '')} on {date_str}: {series.iloc[0]:.2f}")
+            idx = series.index[0]
+            value = series.iloc[0]
+            label = ticker_mapping.get(col, col)
+
+            if hasattr(idx, "strftime"): # not all df have Date index
+                date_str = idx.strftime("%d/%m/%Y")
+                summary.append(f"📈 {label} on {date_str}: {value:.3f}\n")
+            else:
+                summary.append(f"📈 {label}: {value:.3f}\n")
             continue
+
 
         # Get first and last values
         start = series.iloc[0]
