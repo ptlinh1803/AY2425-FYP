@@ -386,7 +386,7 @@ if st.session_state.input_df is not None:
     if st.session_state.output_df is not None and not st.session_state.output_df.empty:
         st.header("Prediction Results")
         # Display more details
-        tab1, tab2, tab3 = st.tabs(["🔢 View Output as a Table", "📊 Visualize Output Data", "📑 Input Output Summary"])
+        tab1, tab2, tab3 = st.tabs(["🔢 View Output as a Table", "📊 Visualize Output Data", "📑 Output Trend Summary"])
         # Show input table
         with tab1:
             st.dataframe(st.session_state.output_df)
