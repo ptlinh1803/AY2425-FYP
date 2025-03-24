@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit.logger import get_logger
+import plotly.graph_objects as go
 
 LOGGER = get_logger(__name__)
 
@@ -7,54 +8,148 @@ LOGGER = get_logger(__name__)
 def run():
     st.set_page_config(
         page_title="Homepage",
-        page_icon="👋",
+        page_icon="🏠",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
+    st.markdown("# 🌐 Yield Curve Explorer App")
 
     st.sidebar.success("Select a page above.")
 
     st.markdown("""
-    ### 📈 What is a Yield Curve?
-    The **yield curve** is a graphical representation of **bond yields** across different maturities.  
-    It helps investors and economists understand **interest rate expectations**, **inflation outlook**, and **economic growth trends**.
+      As the name suggests, this app is designed to **explore and forecast government bond yield curves** using machine learning models.
 
-    ### 🔎 How to Interpret the Yield Curve?
-    The shape of the yield curve provides **insights into market expectations**:
+      - 📊 Visualize historical trends of **bond yields** and **macroeconomic indicators** from 2000 to 2024  
+      - 🌍 Explore yield curve dynamics for **Japan**, **China**, and **Australia**  
+      - 🧠 Forecast future curves with an **LSTM model** using your own data or sample datasets  
+      - ⏳ Experiment with different **forecast windows**  
+      - 🤖 Get AI-generated summaries of **historical yield patterns** and **future predictions**
+      """)
+    
+    st.warning("⚠️ *This app is purely for educational purposes and does not provide financial or investment advice.*")
 
-    - **🔼 Upward-Sloping (Normal Curve)**
-      - Short-term yields **lower** than long-term yields.
-      - Indicates **economic growth** and **inflation expectations**.
-      - Investors expect **higher interest rates** in the future.
-      - Common during economic **expansion**.
 
-    - **🔽 Downward-Sloping (Inverted Curve)**
-      - Short-term yields **higher** than long-term yields.
-      - Often a **recession indicator**.
-      - Suggests **interest rate cuts** or economic slowdown.
-      - Common before an economic **downturn**.
+    st.markdown("""
+      ### 📈 What is a Yield Curve?
+      The **yield curve** is a graphical representation of **bond yields** across different maturities.  
+      It helps investors and economists understand **interest rate expectations**, **inflation outlook**, and **economic growth trends**.
+      """
+    )
 
-    - **〰️ Flat Curve**
-      - Short-term and long-term yields **almost equal**.
-      - Signals **economic uncertainty**.
-      - Often occurs during **transitions** (before recession or recovery).
+    # --- Plotly Yield Curve ---
+    maturities = ["3M", "2Y", "5Y", "10Y", "30Y"]
+    yields = [0.02, 0.446, 0.586, 0.952, 2.221]
 
-    - **🔄 Humped Curve**
-      - Middle-term yields **higher** than both short-term and long-term.
-      - Suggests **short-term uncertainty** but **long-term stability**.
-      - Can indicate **monetary policy shifts**.
-                
-    - **🔄 Reverse Humped Curve**  
-      - Middle-term yields **lower** than both short-term and long-term.  
-      - Suggests **tight short-term monetary policy** but **long-term inflation concerns**.  
-      - Often occurs when **central banks raise short-term rates aggressively**, while markets **expect future rate cuts** due to economic slowdown.  
-      - Can signal **policy transitions, economic uncertainty, or concerns about long-term debt sustainability**.
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=maturities,
+        y=yields,
+        mode='lines+markers',
+        marker=dict(size=8)
+    ))
 
-    ### 💡 Why Does the Yield Curve Matter?
-    - **📊 Investors** use it to predict **stock market trends**.
-    - **🏦 Central banks** monitor it to guide **interest rate decisions**.
-    - **📉 Businesses** use it for **borrowing cost forecasts**.
+    fig.update_layout(
+        xaxis_title="Bond Maturity",
+        yaxis_title="Yield (%)",
+        showlegend=False,
+        margin=dict(l=40, r=40, t=10, b=40),
+        height=400,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # --- Caption ---
+    st.caption("Example: Japan Government Bond Yield Curve on 31/10/2024")
+
+
+    with st.expander("🔎 How to Interpret the Yield Curve?"):
+      st.markdown("""
+      The shape of the yield curve provides **insights into market expectations**:
+
+      - **🔼 Upward-Sloping (Normal Curve)**
+        - Short-term yields **lower** than long-term yields.
+        - Indicates **economic growth** and **inflation expectations**.
+        - Investors expect **higher interest rates** in the future.
+        - Common during economic **expansion**.
+
+      - **🔽 Downward-Sloping (Inverted Curve)**
+        - Short-term yields **higher** than long-term yields.
+        - Often a **recession indicator**.
+        - Suggests **interest rate cuts** or economic slowdown.
+        - Common before an economic **downturn**.
+
+      - **〰️ Flat Curve**
+        - Short-term and long-term yields **almost equal**.
+        - Signals **economic uncertainty**.
+        - Often occurs during **transitions** (before recession or recovery).
+
+      - **🔄 Humped Curve**
+        - Middle-term yields **higher** than both short-term and long-term.
+        - Suggests **short-term uncertainty** but **long-term stability**.
+        - Can indicate **monetary policy shifts**.
+                  
+      - **🔄 Reverse Humped Curve**  
+        - Middle-term yields **lower** than both short-term and long-term.  
+        - Suggests **tight short-term monetary policy** but **long-term inflation concerns**.  
+        - Often occurs when **central banks raise short-term rates aggressively**, while markets **expect future rate cuts** due to economic slowdown.  
+        - Can signal **policy transitions, economic uncertainty, or concerns about long-term debt sustainability**.
+
+      ### 💡 Why Does the Yield Curve Matter?
+      - **📊 Investors** use it to predict **stock market trends**.
+      - **🏦 Central banks** monitor it to guide **interest rate decisions**.
+      - **📉 Businesses** use it for **borrowing cost forecasts**.
+      """)
+
+    # APAC BOND MARKETS
+    st.markdown("## APAC Bond Markets")
+
+    st.markdown("""
+    The bond market is a major part of the global financial system. While the U.S. and Europe dominate in terms of advanced analytics, Asia-Pacific (APAC) markets — especially **China**, **Japan**, and **Australia** — are rapidly growing but still underexplored in terms of predictive modeling.
+
+    By focusing on APAC yield curve forecasting, this app helps bridge the gap and offers valuable insights for both regional and global investors.
     """)
+
+    st.markdown("##### Bond Market Size (2023 Estimates)")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.markdown("#### 🌏")
+        st.markdown("### **$140.7T**")
+        st.markdown("**Worldwide**")
+        st.caption("Larger than global equity (~$115T)")
+
+    with col2:
+        st.markdown("#### 🇨🇳")
+        st.markdown("### **$20T**")
+        st.markdown("**China**")
+        st.caption("2nd largest bond market")
+
+    with col3:
+        st.markdown("#### 🇯🇵")
+        st.markdown("### **$9T**")
+        st.markdown("**Japan**")
+        st.caption("Highly developed market")
+
+    with col4:
+        st.markdown("#### 🇦🇺")
+        st.markdown("### **$1T**")
+        st.markdown("**Australia**")
+        st.caption("Known for higher yields")
+
+    # APP FEATURES
+    st.markdown("## 🔍 Explore the App")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.image("assets/visualization_preview.png", caption="Visualization Preview", use_container_width=True)
+        if st.button("Go to Visualization Page"):
+            st.switch_page("pages/1_📊_Visualization.py")
+
+    with col2:
+        st.image("assets/prediction_preview.png", caption="Prediction View", use_container_width=True)
+        if st.button("Go to Prediction Page"):
+            st.switch_page("pages/2_📈_Prediction.py")
+
 
 
 if __name__ == "__main__":
