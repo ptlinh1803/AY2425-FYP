@@ -1,10 +1,13 @@
 import pandas as pd
 import openai
-from dotenv import load_dotenv
-import os
+import streamlit as st
+# from dotenv import load_dotenv
+# import os
+
 # Load API key
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
+# load_dotenv()
+# openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = st.secrets["api_keys"]["openai"]
 
 # Mapping of tickers to human-readable maturities
 ticker_mapping = {
@@ -181,7 +184,7 @@ def generate_multi_data_prompt(country, start_date, end_date, summary_for_prompt
     return prompt
 
 # 5. Generate prompt for prediction
-def generate_multi_data_prompt(input_metadata, summary_for_prompt):
+def generate_prediction_prompt(input_metadata, summary_for_prompt):
     """
     Create a descriptive prompt for interpreting input and predicted trends,
     based on metadata and the input/output summaries.

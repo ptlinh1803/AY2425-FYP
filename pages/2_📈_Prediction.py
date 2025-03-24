@@ -417,7 +417,7 @@ if st.session_state.input_df is not None:
         st.header("Analyze Results with AI")
         if st.button("💡 AI Interpretation", key="ai_summary_prediction"):
             with st.status("🔄 Generating AI insights for the predictions...", expanded=False):
-                prompt = openai_util.generate_multi_data_prompt(st.session_state.input_metadata, summary_for_prompt)
+                prompt = openai_util.generate_prediction_prompt(st.session_state.input_metadata, summary_for_prompt)
                 st.session_state.ai_summary_predictions = openai_util.get_openai_response(prompt)
 
     # Display AI response if available

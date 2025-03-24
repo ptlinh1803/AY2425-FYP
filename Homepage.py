@@ -22,7 +22,7 @@ def run():
       - 🌍 Explore yield curve dynamics for **Japan**, **China**, and **Australia**  
       - 🧠 Forecast future curves with an **LSTM model** using your own data or sample datasets  
       - ⏳ Experiment with different **forecast windows**  
-      - 🤖 Get AI-generated summaries of **historical yield patterns** and **future predictions**
+      - 🤖 Get **AI-generated summaries** of historical yield patterns and future predictions from **GPT-4o**
       """)
     
     st.warning("⚠️ *This app is purely for educational purposes and does not provide financial or investment advice.*")
