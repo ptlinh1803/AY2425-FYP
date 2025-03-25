@@ -153,7 +153,7 @@ def run():
         st.markdown("""
         - View the full yield curve for a specific day  
         - Track how the curve evolves over a selected time period  
-        - Explore key macroeconomic indicators like **CPI**, **interest rates**, etc.
+        - Explore key macroeconomic indicators like CPI, interest rates, etc.
         - Get AI-generated insights into the yield curve and its relationship with macro factors  
         """)
 
