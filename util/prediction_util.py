@@ -4,6 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import ast
 import plotly.graph_objects as go
+import plotly.express as px
 
 pred_window_mapping = {
     "5 past days → Predict next 1 day": 5,
@@ -542,3 +543,72 @@ def visualize_input_and_prediction(input_df, output_df):
         )
 
         st.plotly_chart(fig, use_container_width=True)
+
+# 4.7. Plot output curve by days
+def plot_animated_yield_curve_from_output_df(output_df):
+    # Rename columns to maturity labels
+    maturity_map = {
+        "Predicted 3M Yield": "3M",
+        "Predicted 2Y Yield": "2Y",
+        "Predicted 5Y Yield": "5Y",
+        "Predicted 10Y Yield": "10Y",
+        "Predicted 30Y Yield": "30Y"
+    }
+
+    # Filter out available maturities from the map
+    available_maturities = [col for col in maturity_map.keys() if col in output_df.columns]
+
+    # Require at least 3 maturities to plot a meaningful curve
+    if len(available_maturities) < 3:
+        st.warning("Not enough yield maturities to plot a curve. At least 3 yield maturities are required to display the curve.")
+        return
+
+    st.write("Slide the slider below to see changes across days and hover to see exact values.")
+    df = output_df.rename(columns=maturity_map)
+
+    # Add a "Day" column as frame
+    df["Day"] = df.index
+
+    # Convert to long format
+    df_long = df.melt(id_vars="Day", var_name="Maturity", value_name="Yield")
+
+    # Ensure maturities are in correct order
+    maturity_order = ["3M", "2Y", "5Y", "10Y", "30Y"]
+    df_long["Maturity"] = pd.Categorical(df_long["Maturity"], categories=maturity_order, ordered=True)
+
+    # Calculate y-range with buffer
+    y_min = df_long["Yield"].min()
+    y_max = df_long["Yield"].max()
+    y_buffer = (y_max - y_min) * 0.3
+    y_min_adjusted = y_min - y_buffer
+    y_max_adjusted = y_max + y_buffer
+
+    # Plotly animated line plot
+    fig = px.line(
+        df_long,
+        x="Maturity",
+        y="Yield",
+        animation_frame="Day",
+        animation_group="Maturity",
+        range_y=[y_min_adjusted, y_max_adjusted],
+        markers=True,
+        color_discrete_sequence=["cornflowerblue"]
+    )
+
+    fig.update_layout(
+        title="Yield Curve Evolution Over Predicted Period",
+        height=600,
+        margin=dict(t=70, b=90, l=20, r=20),
+        legend_title="",
+    )
+
+    # Improve animation responsiveness
+    if fig.layout.sliders:
+        for step in fig.layout.sliders[0].steps:
+            step["args"][1]["frame"]["redraw"] = True
+    if fig.layout.updatemenus:
+        for button in fig.layout.updatemenus[0].buttons:
+            button["args"][1]["frame"]["redraw"] = True
+            button["args"][1]["frame"]["duration"] = 200
+
+    st.plotly_chart(fig)

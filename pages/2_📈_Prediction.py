@@ -402,7 +402,7 @@ if st.session_state.input_df is not None:
     if st.session_state.output_df is not None and not st.session_state.output_df.empty:
         st.header("Prediction Results")
         # Display more details
-        tab1, tab2, tab3 = st.tabs(["🔢 View Output as a Table", "📊 Visualize Output Data", "📑 Output Trend Summary"])
+        tab1, tab2, tab3, tab4 = st.tabs(["🔢 View Output as a Table", "📊 Visualize Input & Output", "📈 See Output Curves", "📑 Output Trend Summary"])
         # Show input table
         with tab1:
             st.dataframe(st.session_state.output_df)
@@ -411,9 +411,13 @@ if st.session_state.input_df is not None:
         with tab2:
             # pred.visualize_prediction_output(st.session_state.output_df)
             pred.visualize_input_and_prediction(st.session_state.input_df, st.session_state.output_df)
+
+        # Animated yield curve
+        with tab3:
+            pred.plot_animated_yield_curve_from_output_df(st.session_state.output_df)
             
         # Summary trends
-        with tab3:
+        with tab4:
             summary_output_trends = openai_util.summarize_basic_trends(st.session_state.output_df, None, None, "Forecasted Yield Curve", show_bps=True)
             summary_for_prompt.append(summary_output_trends)
             st.markdown(summary_output_trends)
