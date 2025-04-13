@@ -38,6 +38,8 @@ if "ai_summary_multi_response" not in st.session_state:
 def update_country():
     st.session_state.country = st.session_state["country_picker"]
     st.session_state.ai_summary_single_response = None
+    st.session_state.ai_summary_trend_response = None
+    st.session_state.ai_summary_multi_response = None
 
 def update_selected_date():
     st.session_state.selected_date = datetime.combine(st.session_state["selected_date_picker"], datetime.min.time())
@@ -46,10 +48,12 @@ def update_selected_date():
 def update_start_date():
     st.session_state.start_date = datetime.combine(st.session_state["start_date_picker"], datetime.min.time())
     st.session_state.ai_summary_trend_response = None
+    st.session_state.ai_summary_multi_response = None
 
 def update_end_date():
     st.session_state.end_date = datetime.combine(st.session_state["end_date_picker"], datetime.min.time())
     st.session_state.ai_summary_trend_response = None
+    st.session_state.ai_summary_multi_response = None
 
 # Dropdown to select country
 st.sidebar.selectbox(

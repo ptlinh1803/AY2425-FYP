@@ -186,7 +186,7 @@ def generate_multi_data_prompt(country, start_date, end_date, summary_for_prompt
             - What does this trend suggest about {country}'s economy?
             - Could this data have influenced the yield curve? If so, how?
             """
-
+    prompt += "What key global or domestic events during this period could have impacted these indicators and the yield curve, if you know?\n"
     prompt += "\n**Please provide a concise, structured response.**"
     
     return prompt
